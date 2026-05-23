@@ -2,8 +2,12 @@
 Notion API との通信を担当するモジュール
 """
 import requests
+import logging
 from datetime import datetime
+from tenacity import retry, stop_after_attempt, wait_exponential
 from config import NOTION_API_KEY, MEMBERS_DB_ID, MATCHING_HISTORY_DB_ID, MATCHING_RESULTS_DB_ID
+
+logger = logging.getLogger(__name__)
 
 HEADERS = {
     "Authorization": f"Bearer {NOTION_API_KEY}",
@@ -12,6 +16,7 @@ HEADERS = {
 }
 
 
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
 def get_all_members() -> list[dict]:
     """メンバーリストDBからアクティブなメンバーを全員取得"""
     members = []
@@ -23,8 +28,21 @@ def get_all_members() -> list[dict]:
         }
     }
     while True:
-        res = requests.post(url, headers=HEADERS, json=payload).json()
-        for page in res.get("results", []):
+        try:
+            res = requests.post(url, headers=HEADERS, json=payload, timeout=10)
+            res.raise_for_status()
+            data = res.json()
+        except requests.exceptions.Timeout:
+            logger.error("Notion API タイムアウト (get_all_members)")
+            raise
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Notion API 通信エラー (get_all_members): {e}")
+            raise
+        except Exception as e:
+            logger.error(f"予期しないエラー (get_all_members): {e}")
+            raise
+
+        for page in data.get("results", []):
             props = page["properties"]
             members.append({
                 "id":                    page["id"],
@@ -38,70 +56,100 @@ def get_all_members() -> list[dict]:
                 "クライアントの課題":    _text(props, "クライアントの課題"),
                 "バリューチェーン位置":  _multi_select(props, "バリューチェーン位置"),
                 "強み":                  _text(props, "強み"),
+                "強み_キーワード":       _multi_select(props, "強み_キーワード"),
                 "課題・足りないもの":    _text(props, "課題・足りないもの"),
+                "課題_キーワード":       _multi_select(props, "課題_キーワード"),
                 "保有アセット":          _multi_select(props, "保有アセット"),
                 "事業フェーズ":          _select(props, "事業フェーズ"),
                 "LINE ID":               _text(props, "LINE ID"),
                 "Facebook URL":          _url(props, "Facebook URL"),
             })
-        if not res.get("has_more"):
+        if not data.get("has_more"):
             break
-        payload["start_cursor"] = res["next_cursor"]
+        payload["start_cursor"] = data["next_cursor"]
     return members
 
 
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
 def get_matched_pairs() -> set[frozenset]:
     """マッチング履歴から既にマッチング済みのペアセットを取得"""
     pairs = set()
     url = f"https://api.notion.com/v1/databases/{MATCHING_HISTORY_DB_ID}/query"
     payload = {}
     while True:
-        res = requests.post(url, headers=HEADERS, json=payload).json()
-        for page in res.get("results", []):
+        try:
+            res = requests.post(url, headers=HEADERS, json=payload, timeout=10)
+            res.raise_for_status()
+            data = res.json()
+        except requests.exceptions.Timeout:
+            logger.error("Notion API タイムアウト (get_matched_pairs)")
+            raise
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Notion API 通信エラー (get_matched_pairs): {e}")
+            raise
+
+        for page in data.get("results", []):
             props = page["properties"]
             a = _text(props, "メンバーA名")
             b = _text(props, "メンバーB名")
             if a and b:
                 pairs.add(frozenset([a, b]))
-        if not res.get("has_more"):
+        if not data.get("has_more"):
             break
-        payload["start_cursor"] = res["next_cursor"]
+        payload["start_cursor"] = data["next_cursor"]
     return pairs
 
 
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
 def get_stats() -> dict:
     """ダッシュボード用の統計情報を取得"""
-    # 総登録者数
-    members_res = requests.post(
-        f"https://api.notion.com/v1/databases/{MEMBERS_DB_ID}/query",
-        headers=HEADERS,
-        json={"filter": {"property": "ステータス", "select": {"equals": "アクティブ"}}}
-    ).json()
-    total_members = len(members_res.get("results", []))
-    has_more = members_res.get("has_more", False)
-    if has_more:
-        # 多い場合はページネーションで全件取得
-        total_members = len(get_all_members())
+    try:
+        # 総登録者数
+        members_res = requests.post(
+            f"https://api.notion.com/v1/databases/{MEMBERS_DB_ID}/query",
+            headers=HEADERS,
+            json={"filter": {"property": "ステータス", "select": {"equals": "アクティブ"}}},
+            timeout=10
+        )
+        members_res.raise_for_status()
+        members_data = members_res.json()
 
-    # 累計マッチング済み件数
-    history_res = requests.post(
-        f"https://api.notion.com/v1/databases/{MATCHING_HISTORY_DB_ID}/query",
-        headers=HEADERS, json={}
-    ).json()
-    total_matched = len(history_res.get("results", []))
+        total_members = len(members_data.get("results", []))
+        has_more = members_data.get("has_more", False)
+        if has_more:
+            # 多い場合はページネーションで全件取得
+            total_members = len(get_all_members())
 
-    # マッチング可能件数（再マッチング除外後のペア数）
-    n = total_members
-    total_possible = n * (n - 1) // 2
-    available = max(0, total_possible - total_matched)
+        # 累計マッチング済み件数
+        history_res = requests.post(
+            f"https://api.notion.com/v1/databases/{MATCHING_HISTORY_DB_ID}/query",
+            headers=HEADERS, json={},
+            timeout=10
+        )
+        history_res.raise_for_status()
+        history_data = history_res.json()
 
-    return {
-        "総登録者数":         total_members,
-        "マッチング可能件数": available,
-        "累計マッチング済み": total_matched,
-    }
+        total_matched = len(history_data.get("results", []))
+
+        # マッチング可能件数（再マッチング除外後のペア数）
+        n = total_members
+        total_possible = n * (n - 1) // 2
+        available = max(0, total_possible - total_matched)
+
+        return {
+            "総登録者数":         total_members,
+            "マッチング可能件数": available,
+            "累計マッチング済み": total_matched,
+        }
+    except requests.exceptions.Timeout:
+        logger.error("Notion API タイムアウト (get_stats)")
+        raise
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Notion API 通信エラー (get_stats): {e}")
+        raise
 
 
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
 def create_member(data: dict) -> str:
     """メンバーリストDBに新規メンバーを登録。ページIDを返す"""
     url = "https://api.notion.com/v1/pages"
@@ -122,7 +170,9 @@ def create_member(data: dict) -> str:
             "クライアントの課題":    {"rich_text": [{"text": {"content": data.get("クライアントの課題", "")}}]},
             "バリューチェーン位置":  {"multi_select": ms(data.get("バリューチェーン位置", []))},
             "強み":                  {"rich_text": [{"text": {"content": data.get("強み", "")}}]},
+            "強み_キーワード":       {"multi_select": ms(data.get("強み_キーワード", []))},
             "課題・足りないもの":    {"rich_text": [{"text": {"content": data.get("課題・足りないもの", "")}}]},
+            "課題_キーワード":       {"multi_select": ms(data.get("課題_キーワード", []))},
             "保有アセット":          {"multi_select": ms(data.get("保有アセット", []))},
             "事業フェーズ":          {"select": {"name": data["事業フェーズ"]}} if data.get("事業フェーズ") else {},
             "LINE ID":               {"rich_text": [{"text": {"content": data.get("LINE ID", "")}}]},
@@ -132,10 +182,19 @@ def create_member(data: dict) -> str:
     }
     # 空の select プロパティを除去
     payload["properties"] = {k: v for k, v in payload["properties"].items() if v}
-    res = requests.post(url, headers=HEADERS, json=payload).json()
-    return res.get("id", "")
+    try:
+        res = requests.post(url, headers=HEADERS, json=payload, timeout=10)
+        res.raise_for_status()
+        return res.json().get("id", "")
+    except requests.exceptions.Timeout:
+        logger.error("Notion API タイムアウト (create_member)")
+        raise
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Notion API 通信エラー (create_member): {e}")
+        raise
 
 
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
 def save_matching_result(session_name: str, match: dict) -> str:
     """マッチング結果DBに1ペアを保存。ページIDを返す"""
     url = "https://api.notion.com/v1/pages"
@@ -157,10 +216,19 @@ def save_matching_result(session_name: str, match: dict) -> str:
             "ステータス":               {"select": {"name": "生成済み"}},
         }
     }
-    res = requests.post(url, headers=HEADERS, json=payload).json()
-    return res.get("id", "")
+    try:
+        res = requests.post(url, headers=HEADERS, json=payload, timeout=10)
+        res.raise_for_status()
+        return res.json().get("id", "")
+    except requests.exceptions.Timeout:
+        logger.error("Notion API タイムアウト (save_matching_result)")
+        raise
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Notion API 通信エラー (save_matching_result): {e}")
+        raise
 
 
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
 def save_to_history(match: dict):
     """マッチング履歴DBにペアを記録（再マッチング防止用）"""
     url = "https://api.notion.com/v1/pages"
@@ -174,32 +242,116 @@ def save_to_history(match: dict):
             "マッチング実施日": {"date": {"start": datetime.now().strftime("%Y-%m-%d")}},
         }
     }
-    requests.post(url, headers=HEADERS, json=payload)
+    try:
+        res = requests.post(url, headers=HEADERS, json=payload, timeout=10)
+        res.raise_for_status()
+    except requests.exceptions.Timeout:
+        logger.error("Notion API タイムアウト (save_to_history)")
+        raise
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Notion API 通信エラー (save_to_history): {e}")
+        raise
+
+
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
+def save_unmatched_member(session_name: str, member: dict) -> str:
+    """マッチングされなかったメンバーをDBに保存。ページIDを返す"""
+    from config import UNMATCHED_MEMBERS_DB_ID
+
+    if not UNMATCHED_MEMBERS_DB_ID:
+        # DB IDが設定されていない場合はスキップ
+        logger.warning("UNMATCHED_MEMBERS_DB_ID が設定されていません")
+        return ""
+
+    logger.debug(f"マッチングされなかったメンバー保存開始: {member.get('名前', 'Unknown')}")
+
+    url = "https://api.notion.com/v1/pages"
+    payload = {
+        "parent": {"database_id": UNMATCHED_MEMBERS_DB_ID},
+        "properties": {
+            "セッション名":           {"title": [{"text": {"content": session_name}}]},
+            "メンバー名":             {"rich_text": [{"text": {"content": member.get("名前", "")}}]},
+            "会社名":                 {"rich_text": [{"text": {"content": member.get("会社名", "")}}]},
+            "業種カテゴリ":           {"select": {"name": member.get("業種カテゴリ", "")}} if member.get("業種カテゴリ") else {},
+            "主力サービス":           {"rich_text": [{"text": {"content": member.get("主力サービス", "")}}]},
+            "強み":                   {"rich_text": [{"text": {"content": member.get("強み", "")}}]},
+            "課題・足りないもの":     {"rich_text": [{"text": {"content": member.get("課題・足りないもの", "")}}]},
+            "記録日":                 {"date": {"start": datetime.now().strftime("%Y-%m-%d")}},
+        }
+    }
+    # 空の select プロパティを除去
+    payload["properties"] = {k: v for k, v in payload["properties"].items() if v}
+
+    try:
+        res = requests.post(url, headers=HEADERS, json=payload, timeout=10)
+        res.raise_for_status()
+        response_data = res.json()
+        if "id" in response_data:
+            logger.info(f"マッチングされなかったメンバー保存成功: {member.get('名前', 'Unknown')}")
+            return response_data.get("id", "")
+        else:
+            logger.error(f"マッチングされなかったメンバー保存失敗: {response_data.get('message', 'Unknown error')}")
+            return ""
+    except requests.exceptions.Timeout:
+        logger.error(f"Notion API タイムアウト (save_unmatched_member): {member.get('名前', 'Unknown')}")
+        raise
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Notion API 通信エラー (save_unmatched_member): {e}")
+        raise
 
 
 # ── ヘルパー関数 ──────────────────────────────────
 def _text(props: dict, key: str) -> str:
     try:
         items = props[key].get("rich_text") or props[key].get("title") or []
-        return "".join(i["plain_text"] for i in items)
-    except Exception:
+        text = "".join(i["plain_text"] for i in items)
+        return " ".join(text.split())  # 前後のスペース削除 + 内部スペースを1つに正規化
+    except KeyError:
+        logger.debug(f"プロパティ '{key}' が見つかりません")
+        return ""
+    except (TypeError, AttributeError) as e:
+        logger.debug(f"データ構造エラー ({key}): {type(e).__name__}")
+        return ""
+    except Exception as e:
+        logger.warning(f"予期しないエラー (_text, {key}): {type(e).__name__}")
         return ""
 
 def _select(props: dict, key: str) -> str:
     try:
         s = props[key].get("select")
         return s["name"] if s else ""
-    except Exception:
+    except KeyError:
+        logger.debug(f"プロパティ '{key}' が見つかりません")
+        return ""
+    except (TypeError, AttributeError) as e:
+        logger.debug(f"データ構造エラー ({key}): {type(e).__name__}")
+        return ""
+    except Exception as e:
+        logger.warning(f"予期しないエラー (_select, {key}): {type(e).__name__}")
         return ""
 
 def _multi_select(props: dict, key: str) -> list[str]:
     try:
         return [o["name"] for o in props[key].get("multi_select", [])]
-    except Exception:
+    except KeyError:
+        logger.debug(f"プロパティ '{key}' が見つかりません")
+        return []
+    except (TypeError, AttributeError) as e:
+        logger.debug(f"データ構造エラー ({key}): {type(e).__name__}")
+        return []
+    except Exception as e:
+        logger.warning(f"予期しないエラー (_multi_select, {key}): {type(e).__name__}")
         return []
 
 def _url(props: dict, key: str) -> str:
     try:
         return props[key].get("url") or ""
-    except Exception:
+    except KeyError:
+        logger.debug(f"プロパティ '{key}' が見つかりません")
+        return ""
+    except (TypeError, AttributeError) as e:
+        logger.debug(f"データ構造エラー ({key}): {type(e).__name__}")
+        return ""
+    except Exception as e:
+        logger.warning(f"予期しないエラー (_url, {key}): {type(e).__name__}")
         return ""

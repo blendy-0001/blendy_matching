@@ -11,13 +11,14 @@ NOTION_API_KEY = os.getenv("NOTION_API_KEY")
 CLAUDE_API_KEY = os.getenv("CLAUDE_API_KEY")
 
 # ── Notion データベースID ──────────────────────────
-MEMBERS_DB_ID         = "517b9ae4-8e9d-496d-b581-927bde2af2fe"  # 👥 メンバーリスト
-MATCHING_HISTORY_DB_ID = "f650ca34-90b9-49e7-908e-240394dd47ed"  # 🔗 マッチング履歴
-MATCHING_RESULTS_DB_ID = "968cbe70-f0be-4f7c-8015-e275655e880e"  # 📋 マッチング結果
+MEMBERS_DB_ID           = os.getenv("MEMBERS_DB_ID", "517b9ae4-8e9d-496d-b581-927bde2af2fe")  # 👥 メンバーリスト
+MATCHING_HISTORY_DB_ID  = os.getenv("MATCHING_HISTORY_DB_ID", "f650ca34-90b9-49e7-908e-240394dd47ed")  # 🔗 マッチング履歴
+MATCHING_RESULTS_DB_ID  = os.getenv("MATCHING_RESULTS_DB_ID", "968cbe70-f0be-4f7c-8015-e275655e880e")  # 📋 マッチング結果
+UNMATCHED_MEMBERS_DB_ID = os.getenv("UNMATCHED_MEMBERS_DB_ID", "")  # 📊 マッチングされなかったメンバー
 
 # ── マッチング設定 ────────────────────────────────
-MIN_SCORE = 70           # このスコア未満はマッチングしない
-MAX_MATCHES_PER_RUN = 20 # 1回の実行で生成する最大ペア数
+MIN_SCORE = 45           # 高品質マッチングのみ（ルール版用）
+MAX_MATCHES_PER_RUN = 30  # 1回の実行で生成する最大ペア数（ユーザーが残り3件を手動調整）
 
 # ── スコアリング配点 ─────────────────────────────
 SCORE_WEIGHTS = {
