@@ -54,19 +54,21 @@ async def add_security_headers(request: Request, call_next):
 def verify_api_key(x_api_key: str = Header(None)):
     """API キー認証（本番環境で使用）"""
     api_key = os.getenv("API_KEY", "")
+    env = os.getenv("ENV", "development").lower()
 
-    # ローカル開発環境では認証をスキップ
-    if os.getenv("ENV", "development") == "development":
+    # 本番環境（ENV=production）では必ず認証を実施
+    if env == "production":
+        if not api_key:
+            logger.warning("API_KEY is not configured in production mode")
+            raise HTTPException(status_code=500, detail="API_KEY not configured")
+
+        if not x_api_key or x_api_key != api_key:
+            logger.warning(f"Invalid API key attempt")
+            raise HTTPException(status_code=403, detail="Invalid or missing API key")
         return True
 
-    # 本番環境では API キーが必須
-    if not api_key:
-        # API キーが設定されていない場合は認証をスキップ
-        logger.warning("⚠️ API_KEY が設定されていません")
-        return True
-
-    if not x_api_key or x_api_key != api_key:
-        raise HTTPException(status_code=403, detail="Invalid or missing API key")
+    # 開発環境では認証をスキップ（テスト時にENV=productionで強制）
+    logger.debug(f"Development mode: API key verification skipped")
     return True
 
 # マッチング実行状態の管理
