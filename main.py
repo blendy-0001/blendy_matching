@@ -7,8 +7,9 @@ from fastapi import FastAPI, BackgroundTasks, Request, Form, Depends, HTTPExcept
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import uvicorn
 import logging
 import os
@@ -23,6 +24,62 @@ from notion_client import get_all_members, get_matched_pairs, get_stats, save_ma
 from matching_engine import run_matching, save_backup
 
 # Trigger reload to pick up matching_engine.py changes (2026-05-23 update - reloading now)
+
+# ────────────────────────────────────────────
+# Pydantic レスポンスモデル
+# ────────────────────────────────────────────
+
+class StatsResponse(BaseModel):
+    """ダッシュボード統計情報のレスポンス"""
+    success: bool = Field(description="リクエスト成功フラグ")
+    stats: Dict[str, Any] = Field(description="統計情報（総登録者数、マッチング可能件数、累計マッチング済み）")
+    running: bool = Field(description="マッチング実行中フラグ")
+    progress: str = Field(description="進行状況メッセージ")
+
+
+class MatchingResultItem(BaseModel):
+    """マッチング結果アイテム"""
+    メンバーA名: str = Field(description="マッチしたメンバーA の名前")
+    メンバーB名: str = Field(description="マッチしたメンバーB の名前")
+    スコア: float = Field(description="相性スコア（0-100）")
+    協業タイプ: str = Field(description="協業の種類")
+    マッチング理由: str = Field(description="マッチング理由")
+    紹介文: str = Field(description="マッチング紹介文")
+
+
+class UnmatchedMember(BaseModel):
+    """マッチングされなかったメンバー情報"""
+    名前: str = Field(description="メンバー名")
+    理由: str = Field(description="マッチされなかった理由")
+
+
+class MatchingResponseData(BaseModel):
+    """マッチング結果のデータ"""
+    matched: List[MatchingResultItem] = Field(description="マッチングされたペア一覧")
+    unmatched: List[UnmatchedMember] = Field(description="マッチングされなかったメンバー一覧")
+
+
+class RunMatchingResponse(BaseModel):
+    """マッチング開始のレスポンス"""
+    success: bool = Field(description="リクエスト成功フラグ")
+    message: Optional[str] = Field(None, description="実行メッセージ")
+    error: Optional[str] = Field(None, description="エラーメッセージ")
+
+
+class GetResultsResponse(BaseModel):
+    """マッチング結果取得のレスポンス"""
+    success: bool = Field(description="リクエスト成功フラグ")
+    running: bool = Field(description="マッチング実行中フラグ")
+    progress: str = Field(description="進行状況メッセージ")
+    results: Optional[MatchingResponseData] = Field(None, description="マッチング結果データ")
+
+
+class RegisterMemberResponse(BaseModel):
+    """メンバー登録のレスポンス"""
+    success: bool = Field(description="リクエスト成功フラグ")
+    page_id: Optional[str] = Field(None, description="作成されたNotionページID")
+    error: Optional[str] = Field(None, description="エラーメッセージ")
+
 
 app = FastAPI(title="協業マッチングシステム")
 
@@ -51,8 +108,13 @@ async def add_security_headers(request: Request, call_next):
     return response
 
 # API キー認証
-def verify_api_key(x_api_key: str = Header(None)):
-    """API キー認証（本番環境で使用）"""
+def verify_api_key(x_api_key: str = Header(..., description="API キー（Render本番環境で必須）")):
+    """
+    API キー認証（本番環境で使用）
+
+    本番環境（ENV=production）では、X-API-Key ヘッダーの値が API_KEY 環境変数と一致する必要があります。
+    開発環境では認証をスキップします（テスト時に ENV=production で強制可能）。
+    """
     api_key = os.getenv("API_KEY", "")
     env = os.getenv("ENV", "development").lower()
 
@@ -62,13 +124,13 @@ def verify_api_key(x_api_key: str = Header(None)):
             logger.warning("API_KEY is not configured in production mode")
             raise HTTPException(status_code=500, detail="API_KEY not configured")
 
-        if not x_api_key or x_api_key != api_key:
-            logger.warning(f"Invalid API key attempt")
+        if x_api_key != api_key:
+            logger.warning(f"Invalid API key attempt from {x_api_key[:4]}****")
             raise HTTPException(status_code=403, detail="Invalid or missing API key")
         return True
 
     # 開発環境では認証をスキップ（テスト時にENV=productionで強制）
-    logger.debug(f"Development mode: API key verification skipped")
+    logger.debug(f"Development mode: API key verification skipped (ENV={env})")
     return True
 
 # マッチング実行状態の管理
@@ -94,25 +156,30 @@ async def register_form():
         return f.read()
 
 
-@app.post("/api/register")
+@app.post("/api/register", response_model=RegisterMemberResponse, tags=["Member Management"])
 async def register_member(
-    名前: str = Form(...),
-    会社名: str = Form(""),
-    業種カテゴリ: str = Form(""),
-    業種詳細: str = Form(""),
-    主力サービス: str = Form(""),
-    エンドクライアント業界: str = Form(""),
-    エンドクライアント規模: str = Form(""),
-    クライアントの課題: str = Form(""),
-    バリューチェーン位置: List[str] = Form(default=[]),
-    強み: str = Form(""),
-    課題足りないもの: str = Form(""),
-    保有アセット: List[str] = Form(default=[]),
-    事業フェーズ: str = Form(""),
-    LINE_ID: str = Form(""),
-    Facebook_URL: str = Form(""),
+    名前: str = Form(..., description="メンバーの名前（必須）"),
+    会社名: str = Form("", description="所属会社名"),
+    業種カテゴリ: str = Form("", description="業種カテゴリ"),
+    業種詳細: str = Form("", description="業種の詳細"),
+    主力サービス: str = Form("", description="提供している主力サービス"),
+    エンドクライアント業界: str = Form("", description="エンドクライアント業界"),
+    エンドクライアント規模: str = Form("", description="エンドクライアントの企業規模"),
+    クライアントの課題: str = Form("", description="クライアントが抱えている課題"),
+    バリューチェーン位置: List[str] = Form(default=[], description="ビジネスのバリューチェーン上の位置"),
+    強み: str = Form("", description="自社の強み・得意分野"),
+    課題足りないもの: str = Form("", description="自社に足りないもの・課題"),
+    保有アセット: List[str] = Form(default=[], description="保有している資産・リソース"),
+    事業フェーズ: str = Form("", description="現在の事業フェーズ"),
+    LINE_ID: str = Form("", description="LINE ID"),
+    Facebook_URL: str = Form("", description="Facebook URL"),
 ):
-    """フォーム送信を受け取りNotionに登録"""
+    """
+    新規メンバーを登録する
+
+    企業情報、サービス内容、課題などを登録フォームから送信します。
+    登録情報はNotionデータベースに保存され、マッチング対象になります。
+    """
     try:
         data = {
             "名前": 名前,
@@ -132,62 +199,92 @@ async def register_member(
             "Facebook URL": Facebook_URL,
         }
         page_id = create_member(data)
-        return JSONResponse({"success": True, "page_id": page_id})
+        logger.info(f"新規メンバー登録成功: {名前} (Page ID: {page_id})")
+        return RegisterMemberResponse(success=True, page_id=page_id)
     except Exception as e:
         logger.error(f"メンバー登録エラー: {traceback.format_exc()}")
-        return JSONResponse(
-            {"success": False, "error": "メンバー登録に失敗しました。入力内容を確認してください。"},
-            status_code=500
+        return RegisterMemberResponse(
+            success=False,
+            error="メンバー登録に失敗しました。入力内容を確認してください。"
         )
 
 
-@app.get("/api/stats")
+@app.get("/api/stats", response_model=StatsResponse, tags=["Dashboard"])
 async def get_dashboard_stats():
-    """ダッシュボード統計情報を返す"""
+    """
+    ダッシュボード統計情報を返す
+
+    登録メンバー数、マッチング可能なペア数、実施済みマッチング数などの統計情報を取得します。
+    """
     try:
         stats = get_stats()
-        return {
-            "success": True,
-            "stats": stats,
-            "running": matching_state["running"],
-            "progress": matching_state["progress"],
-        }
+        return StatsResponse(
+            success=True,
+            stats=stats,
+            running=matching_state["running"],
+            progress=matching_state["progress"],
+        )
     except Exception as e:
         logger.error(f"統計情報取得エラー: {traceback.format_exc()}")
-        return {
-            "success": False,
-            "error": "統計情報の取得に失敗しました",
-            "stats": {"総登録者数": 0, "マッチング可能件数": 0, "累計マッチング済み": 0},
-            "running": matching_state["running"],
-            "progress": matching_state["progress"],
-        }
+        return StatsResponse(
+            success=False,
+            stats={"総登録者数": 0, "マッチング可能件数": 0, "累計マッチング済み": 0},
+            running=matching_state["running"],
+            progress=matching_state["progress"],
+        )
 
 
-@app.post("/api/run-matching")
-async def start_matching(background_tasks: BackgroundTasks, max_matches: int = 15, api_key: str = Depends(verify_api_key)):
+@app.post("/api/run-matching", response_model=RunMatchingResponse, tags=["Matching"])
+async def start_matching(
+    background_tasks: BackgroundTasks,
+    max_matches: int = 15,
+    api_key: str = Depends(verify_api_key)
+):
     """
-    マッチングを開始する
+    AI マッチング処理を開始する
 
-    Args:
+    バックグラウンドでマッチング処理を非同期実行します。
+    実行中の状態確認は `/api/results` エンドポイントで行えます。
+
+    Parameters:
         max_matches: 今回のマッチング目標組数（デフォルト: 15）
-        api_key: API キー認証（Header: X-API-Key）
+        X-API-Key: Render本番環境での認証キー（ヘッダー）
+
+    Returns:
+        - success: True の場合、マッチング処理がバックグラウンドで開始されました
+        - error: 既に実行中の場合、エラーメッセージが返ります
     """
     if matching_state["running"]:
-        return JSONResponse({"success": False, "error": "マッチングが既に実行中です"})
+        logger.warning("マッチング処理が既に実行中です")
+        return RunMatchingResponse(success=False, error="マッチングが既に実行中です")
 
     background_tasks.add_task(_run_matching_task, max_matches)
-    return {"success": True, "message": "マッチングを開始しました"}
+    logger.info(f"マッチング処理を開始しました（目標: {max_matches}組）")
+    return RunMatchingResponse(success=True, message="マッチングを開始しました")
 
 
-@app.get("/api/results")
+@app.get("/api/results", response_model=GetResultsResponse, tags=["Matching"])
 async def get_latest_results():
-    """最新のマッチング結果を返す"""
-    return {
-        "success": True,
-        "running": matching_state["running"],
-        "progress": matching_state["progress"],
-        "results": matching_state["last_result"],
-    }
+    """
+    最新のマッチング結果を取得する
+
+    マッチング処理の実行状態、進捗、および結果を取得します。
+    処理実行中は progress フィールドに進行状況が返されます。
+
+    Returns:
+        - success: リクエスト成功フラグ
+        - running: マッチング処理が実行中かどうか
+        - progress: 進捗メッセージ
+        - results: マッチング結果（処理完了時のみ含まれます）
+            - matched: マッチングされたペア一覧
+            - unmatched: マッチングされなかったメンバー一覧
+    """
+    return GetResultsResponse(
+        success=True,
+        running=matching_state["running"],
+        progress=matching_state["progress"],
+        results=matching_state["last_result"],
+    )
 
 
 async def _run_matching_task(max_matches: int = 15):
