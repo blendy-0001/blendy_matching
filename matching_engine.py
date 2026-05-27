@@ -117,9 +117,10 @@ def _score_pair_rules(a: dict, b: dict) -> dict | None:
             "バリューチェーン接続性": _calc_chain_fit(a, b),
             "市場ソリューションフィット": _calc_market_fit(a, b),
             "事業拡張ポテンシャル": _calc_expansion_potential(a, b),
+            "対象市場一致度": _calc_target_market_fit(a, b),  # Phase 1追加
         }
 
-        total_score = sum(scores.values())
+        total_score = min(sum(scores.values()), 100)  # スコアを100以下にキャップ
         collab_type = _determine_collab_type(a, b, scores)
         reason = _generate_reason(a, b, scores)
 
@@ -316,11 +317,78 @@ def _calc_expansion_potential(a: dict, b: dict) -> int:
     return min(score, 20)
 
 
+def _calc_target_market_fit(a: dict, b: dict) -> int:
+    """
+    対象市場一致度（15点満点）
+
+    Phase 1 追加：マルチアクティビティ対応
+    両社が狙っている対象業界の共通部分を計算
+
+    例）
+    A社：対象業界=「医療」「バイオ」
+    B社：対象業界=「医療」「研究機関」
+    → 共通「医療」 = 1個 / max(2,2) = 50% → 7.5点
+    """
+    score = 0
+
+    # 対象業界を取得（マルチアクティビティ対応）
+    # マルチアクティビティ: 「対象業界」フィールド
+    # シングルアクティビティ: 「エンドクライアント業界」フィールド（フォールバック）
+    target_industries_a = _parse_industries(a.get("対象業界", "") or a.get("エンドクライアント業界", ""))
+    target_industries_b = _parse_industries(b.get("対象業界", "") or b.get("エンドクライアント業界", ""))
+
+    if not target_industries_a or not target_industries_b:
+        return 0  # 対象業界が未設定の場合はスコアなし
+
+    # 共通業界を検出
+    common_industries = set(target_industries_a) & set(target_industries_b)
+
+    if not common_industries:
+        return 0  # 共通業界がない
+
+    # スコア計算：共通業界の割合 × 最大15点
+    overlap_ratio = len(common_industries) / max(len(target_industries_a), len(target_industries_b))
+    score = int(overlap_ratio * 15)
+
+    logger.debug(f"対象市場一致度: {a['名前']} × {b['名前']}")
+    logger.debug(f"  A: {target_industries_a}, B: {target_industries_b}")
+    logger.debug(f"  共通: {list(common_industries)}, スコア: {score}")
+
+    return min(score, 15)
+
+
+def _parse_industries(industry_str: str) -> list[str]:
+    """
+    対象業界文字列をパース（複数業界対応）
+
+    入力例：
+    - 「医療」（単一）
+    - 「医療、バイオ」（日本語カンマ区切り）
+    - 「医療,バイオ」（ASCII カンマ区切り）
+    - 「医療/バイオ」（スラッシュ区切り）
+    - 「医療 バイオ」（スペース区切り）
+
+    戻り値：['医療', 'バイオ']
+    """
+    if not industry_str:
+        return []
+
+    # 日本語カンマ、ASCII カンマ、スラッシュ、スペースで分割
+    import re
+    # 日本語の「、」と「、」の両方に対応
+    industries = re.split(r'[,、/\s]+', industry_str.strip())
+
+    # 空文字列を除去、重複を除去
+    industries = [ind.strip() for ind in industries if ind.strip()]
+    return list(dict.fromkeys(industries))  # 順序を保持しながら重複除去
+
+
 def _determine_collab_type(a: dict, b: dict, scores: dict) -> str:
     """スコア内訳から最適な協業タイプを判定"""
     chain = scores["バリューチェーン接続性"]
     market = scores["市場ソリューションフィット"]
     client = scores["エンドクライアント一致度"]
+    target_market = scores["対象市場一致度"]
 
     if chain == 25:
         return "A バリューチェーン型"
@@ -328,6 +396,8 @@ def _determine_collab_type(a: dict, b: dict, scores: dict) -> str:
         return "B 市場参入型"
     elif client >= 15:
         return "C バンドル強化型"
+    elif target_market >= 10:
+        return "C バンドル強化型"  # 対象市場一致が高い場合も同じ市場狙いで相乗効果あり
     elif _has_strength_keyword(a, ["技術・開発"]) and \
          _has_strength_keyword(b, ["営業・ネットワーク"]):
         return "D OEM・裏方型"
@@ -349,6 +419,15 @@ def _generate_reason(a: dict, b: dict, scores: dict) -> str:
 
     if scores["市場ソリューションフィット"] >= 15:
         reasons.append(f"{a.get('名前')}のソリューションと{b.get('名前')}の市場を補完")
+
+    if scores["対象市場一致度"] >= 7:
+        # 共通の対象業界を抽出して表示
+        industries_a = _parse_industries(a.get("対象業界", "") or a.get("エンドクライアント業界", ""))
+        industries_b = _parse_industries(b.get("対象業界", "") or b.get("エンドクライアント業界", ""))
+        common = set(industries_a) & set(industries_b)
+        if common:
+            industry_text = "・".join(list(common)[:2])  # 最大2つまで表示
+            reasons.append(f"同じ{industry_text}市場を対象")
 
     if scores["事業拡張ポテンシャル"] >= 10:
         reasons.append("新市場開拓の可能性")

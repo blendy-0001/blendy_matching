@@ -6,3 +6,34 @@ services:
     plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+
+    # 環境変数は Render.com ダッシュボードで設定してください
+    # https://dashboard.render.com/select-repo → Environment
+    envVars:
+      # 本番環境モード（認証を強制）
+      - key: ENV
+        value: production
+
+      # ログレベル（本番は INFO または WARNING）
+      - key: LOG_LEVEL
+        value: INFO
+
+      # CORS 許可オリジン（本番ドメインに設定）
+      - key: ALLOWED_ORIGINS
+        value: https://blendy-matching.onrender.com
+
+      # 以下は Render.com Secrets（ダッシュボード）で設定
+      # - key: NOTION_API_KEY
+      #   fromSecret: notion_api_key
+      # - key: CLAUDE_API_KEY
+      #   fromSecret: claude_api_key
+      # - key: API_KEY
+      #   fromSecret: api_key
+      # - key: MEMBERS_DB_ID
+      #   fromSecret: members_db_id
+      # - key: MATCHING_HISTORY_DB_ID
+      #   fromSecret: matching_history_db_id
+      # - key: MATCHING_RESULTS_DB_ID
+      #   fromSecret: matching_results_db_id
+      # - key: UNMATCHED_MEMBERS_DB_ID
+      #   fromSecret: unmatched_members_db_id

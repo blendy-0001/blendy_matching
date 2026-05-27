@@ -5,7 +5,7 @@ import requests
 import logging
 from datetime import datetime
 from tenacity import retry, stop_after_attempt, wait_exponential
-from config import NOTION_API_KEY, MEMBERS_DB_ID, MATCHING_HISTORY_DB_ID, MATCHING_RESULTS_DB_ID
+from config import NOTION_API_KEY, MEMBERS_DB_ID, ACTIVITIES_DB_ID, MATCHING_HISTORY_DB_ID, MATCHING_RESULTS_DB_ID
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +61,8 @@ def get_all_members() -> list[dict]:
                 "課題_キーワード":       _multi_select(props, "課題_キーワード"),
                 "保有アセット":          _multi_select(props, "保有アセット"),
                 "事業フェーズ":          _select(props, "事業フェーズ"),
+                "メール":                props.get("メール", {}).get("email", ""),
+                "協業タイプ":            _select(props, "協業タイプ"),
                 "LINE ID":               _text(props, "LINE ID"),
                 "Facebook URL":          _url(props, "Facebook URL"),
             })
@@ -191,6 +193,118 @@ def create_member(data: dict) -> str:
         raise
     except requests.exceptions.RequestException as e:
         logger.error(f"Notion API 通信エラー (create_member): {e}")
+        raise
+
+
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
+def create_activity(member_id: str, activity_data: dict) -> str:
+    """
+    activitiesテーブルに新規アクティビティを登録。ページIDを返す
+
+    Args:
+        member_id: members テーブルのレコード ID
+        activity_data: {
+            'アクティビティ名': str,
+            'サービス内容': str,
+            '強み_キーワード': list,
+            '強み_詳細': str,
+            '課題_キーワード': list,
+            '課題_詳細': str,
+            'バリューチェーン位置': list,
+            '対象業界': str,
+            '対象企業規模': str,
+        }
+    """
+    if not ACTIVITIES_DB_ID:
+        logger.warning("ACTIVITIES_DB_ID が設定されていません。アクティビティ保存をスキップします。")
+        return ""
+
+    url = "https://api.notion.com/v1/pages"
+
+    def ms(values: list[str]) -> list[dict]:
+        """multi_select用のリスト変換"""
+        return [{"name": v} for v in (values or []) if v]
+
+    payload = {
+        "parent": {"database_id": ACTIVITIES_DB_ID},
+        "properties": {
+            "アクティビティ名": {"title": [{"text": {"content": activity_data.get("アクティビティ名", "")}}]},
+            "サービス内容": {"rich_text": [{"text": {"content": activity_data.get("サービス内容", "")}}]},
+            "強み_キーワード": {"multi_select": ms(activity_data.get("強み_キーワード", []))},
+            "強み_詳細": {"rich_text": [{"text": {"content": activity_data.get("強み_詳細", "")}}]},
+            "課題_キーワード": {"multi_select": ms(activity_data.get("課題_キーワード", []))},
+            "課題_詳細": {"rich_text": [{"text": {"content": activity_data.get("課題_詳細", "")}}]},
+            "バリューチェーン位置": {"multi_select": ms(activity_data.get("バリューチェーン位置", []))},
+            "対象業界": {"rich_text": [{"text": {"content": activity_data.get("対象業界", "")}}]},
+            "対象企業規模": {"select": {"name": activity_data["対象企業規模"]}} if activity_data.get("対象企業規模") else {},
+            "member_id": {"relation": [{"id": member_id}]} if member_id else {},
+        }
+    }
+    # 空のプロパティを除去
+    payload["properties"] = {k: v for k, v in payload["properties"].items() if v}
+
+    try:
+        res = requests.post(url, headers=HEADERS, json=payload, timeout=10)
+        res.raise_for_status()
+        result = res.json()
+        logger.info(f"アクティビティ作成成功: {activity_data.get('アクティビティ名', 'Unknown')}")
+        return result.get("id", "")
+    except requests.exceptions.Timeout:
+        logger.error("Notion API タイムアウト (create_activity)")
+        raise
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Notion API 通信エラー (create_activity): {e}")
+        raise
+
+
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
+def get_member_activities(member_id: str) -> list[dict]:
+    """
+    特定のメンバーの全アクティビティを取得
+
+    Returns:
+        アクティビティのリスト
+    """
+    if not ACTIVITIES_DB_ID:
+        logger.warning("ACTIVITIES_DB_ID が設定されていません。空リストを返します。")
+        return []
+
+    url = f"https://api.notion.com/v1/databases/{ACTIVITIES_DB_ID}/query"
+    payload = {
+        "filter": {
+            "property": "member_id",
+            "relation": {"contains": member_id}
+        },
+        "page_size": 100
+    }
+
+    try:
+        res = requests.post(url, headers=HEADERS, json=payload, timeout=10)
+        res.raise_for_status()
+        data = res.json()
+
+        activities = []
+        for page in data.get("results", []):
+            props = page["properties"]
+            activities.append({
+                "id": page["id"],
+                "アクティビティ名": _text(props, "アクティビティ名"),
+                "サービス内容": _text(props, "サービス内容"),
+                "強み_キーワード": _multi_select(props, "強み_キーワード"),
+                "強み_詳細": _text(props, "強み_詳細"),
+                "課題_キーワード": _multi_select(props, "課題_キーワード"),
+                "課題_詳細": _text(props, "課題_詳細"),
+                "バリューチェーン位置": _multi_select(props, "バリューチェーン位置"),
+                "対象業界": _text(props, "対象業界"),
+                "対象企業規模": _select(props, "対象企業規模"),
+            })
+
+        return activities
+    except requests.exceptions.Timeout:
+        logger.error(f"Notion API タイムアウト (get_member_activities): {member_id}")
+        raise
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Notion API 通信エラー (get_member_activities): {e}")
         raise
 
 
