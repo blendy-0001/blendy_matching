@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🤝 ブレンドマッチ | パートナーマッチングプラットフォーム</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Yu Gothic', sans-serif;
+      background: #f5f5f0;
+      color: #2d2d2d;
+      min-height: 100vh;
+    }
+    header {
+      background: #1a1a1a;
+      color: white;
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 { font-size: 1.2rem; font-weight: 600; }
+    header span { font-size: 0.85rem; color: #999; }
+
+    .container { max-width: 720px; margin: 0 auto; padding: 40px 20px 80px; }
+
+    .intro {
+      background: white;
+      border-radius: 16px;
+      padding: 28px 32px;
+      margin-bottom: 32px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    .intro h2 { font-size: 1.2rem; margin-bottom: 10px; }
+    .intro p { font-size: 0.9rem; color: #666; line-height: 1.8; }
+
+    .form-card {
+      background: white;
+      border-radius: 16px;
+      padding: 36px 32px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: #888;
+      text-transform: uppercase;
+      margin: 32px 0 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #eee;
+    }
+    .section-title:first-child { margin-top: 0; }
+
+    .field { margin-bottom: 20px; }
+    .field label {
+      display: block;
+      font-size: 0.88rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #333;
+    }
+    .field label .required {
+      color: #e84040;
+      margin-left: 4px;
+    }
+    .field label .hint {
+      font-weight: 400;
+      color: #999;
+      font-size: 0.8rem;
+      margin-left: 6px;
+    }
+    .field input[type="text"],
+    .field input[type="email"],
+    .field input[type="url"],
+    .field select,
+    .field textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      transition: border-color 0.2s;
+      background: white;
+    }
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      outline: none;
+      border-color: #1a1a1a;
+    }
+    .field textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+
+    /* チェックボックス/ラジオボタングループ */
+    .checkbox-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-size: 0.85rem;
+    }
+    .checkbox-item:hover { border-color: #aaa; background: #fafafa; }
+    .checkbox-item input[type="checkbox"],
+    .checkbox-item input[type="radio"] { width: 16px; height: 16px; cursor: pointer; accent-color: #1a1a1a; }
+    .checkbox-item.checked { border-color: #1a1a1a; background: #f0f0f0; font-weight: 600; }
+
+    /* AI推測表示ボックス */
+    .ai-inference-box {
+      background: #f0f8ff;
+      border: 1.5px solid #add8e6;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+      color: #0066cc;
+    }
+    .ai-inference-box strong { color: #004999; }
+
+    .submit-area {
+      margin-top: 36px;
+      text-align: center;
+    }
+    .submit-btn {
+      background: #1a1a1a;
+      color: white;
+      border: none;
+      padding: 16px 64px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.05em;
+    }
+    .submit-btn:hover { background: #333; transform: translateY(-1px); }
+    .submit-btn:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+
+    /* 完了画面 */
+    .success-screen {
+      display: none;
+      text-align: center;
+      padding: 60px 20px;
+    }
+    .success-screen .emoji { font-size: 4rem; margin-bottom: 20px; }
+    .success-screen h2 { font-size: 1.4rem; margin-bottom: 12px; }
+    .success-screen p { color: #666; font-size: 0.95rem; line-height: 1.8; }
+
+    .error-msg {
+      display: none;
+      background: #fff0f0;
+      border: 1px solid #ffcccc;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 0.88rem;
+      color: #c00;
+      margin-top: 16px;
+    }
+
+    @media (max-width: 600px) {
+      .container { padding: 20px 16px 60px; }
+      .form-card { padding: 24px 20px; }
+      .checkbox-group { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🤝 ブレンドマッチ</h1>
+  <span>パートナーマッチング</span>
+</header>
+
+<div class="container">
+
+  <div class="intro">
+    <h2>ブレンドマッチへようこそ</h2>
+    <p>
+      対等なパートナーシップで、事業を拡大させる相手を見つける。<br>
+      発注でもなく、受注でもない。相互に成長できるパートナーを、月2回ご紹介します。<br>
+      以下のフォームに入力いただくと、最適な協業パートナーがマッチングされます。
+    </p>
+  </div>
+
+  <div class="form-card">
+
+    <!-- 完了画面 -->
+    <div class="success-screen" id="successScreen">
+      <div class="emoji">🎉</div>
+      <h2>申込が完了しました！</h2>
+      <p>
+        登録ありがとうございます。<br>
+        月2回のマッチング結果をLINEまたはFacebookでご連絡します。<br>
+        しばらくお待ちください。
+      </p>
+    </div>
+
+    <!-- フォーム -->
+    <form id="registerForm" onsubmit="submitForm(event)">
+
+      <!-- ===== 基本情報 ===== -->
+      <div class="section-title">基本情報</div>
+
+      <div class="field">
+        <label>お名前 <span class="required">*</span></label>
+        <input type="text" name="名前" placeholder="例：山田 太郎" required>
+      </div>
+
+      <div class="field">
+        <label>会社名・屋号 <span class="required">*</span></label>
+        <input type="text" name="会社名" placeholder="例：株式会社〇〇" required>
+      </div>
+
+      <!-- ===== 自社について ===== -->
+      <div class="section-title">自社について</div>
+
+      <div class="field">
+        <label>
+          自社の業種カテゴリ
+          <span class="required">*</span>
+          <span class="hint">あなたの企業が属する業種</span>
+        </label>
+        <select name="業種カテゴリ" required>
+          <option value="">選択してください</option>
+          <option>IT・システム開発</option>
+          <option>マーケティング・広告</option>
+          <option>コンサルティング</option>
+          <option>営業・販売支援</option>
+          <option>教育・研修</option>
+          <option>医療・福祉・介護</option>
+          <option>製造・メーカー</option>
+          <option>不動産・建設</option>
+          <option>士業</option>
+          <option>クリエイティブ</option>
+          <option>その他</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>業種の詳細 <span class="required">*</span></label>
+        <input type="text" name="業種詳細" placeholder="例：SaaS開発、BtoB向けコンサルティング" required>
+      </div>
+
+      <div class="field">
+        <label>主力サービス・事業内容 <span class="required">*</span></label>
+        <textarea name="主力サービス" placeholder="例：中小企業向けの営業支援SaaSを開発。月額5万円で導入し、商談数を平均2倍にする。" required></textarea>
+      </div>
+
+      <div class="field">
+        <label>事業フェーズ <span class="required">*</span></label>
+        <select name="事業フェーズ" required>
+          <option value="">選択してください</option>
+          <option>アイデア段階</option>
+          <option>立上げ期</option>
+          <option>成長期</option>
+          <option>安定期</option>
+        </select>
+      </div>
+
+      <!-- ===== 協業の方向性（改：AI推測） ===== -->
+      <div class="section-title">協業の方向性</div>
+
+      <div class="ai-inference-box">
+        💡 <strong>協業タイプについて：</strong><br>
+        あなたの課題感・強み・バリューチェーン位置から、当社のAIが最適な協業パートナータイプを自動分析・推奨します。<br>
+        以下の項目をご入力いただくだけで、マッチします。
+      </div>
+
+      <div class="field">
+        <label>
+          対象とする企業層・業界
+          <span class="required">*</span>
+          <span class="hint">パートナーとして一緒に市場開拓したい企業の業界</span>
+        </label>
+        <input type="text" name="エンドクライアント業界" placeholder="例：製造業、小売業、医療・介護、不動産業、金融業" required>
+      </div>
+
+      <div class="field">
+        <label>企業規模 <span class="required">*</span><span class="hint">パートナーの対象企業規模</span></label>
+        <select name="エンドクライアント規模" required>
+          <option value="">選択してください</option>
+          <option>個人・フリーランス</option>
+          <option>スモールビジネス〜10名</option>
+          <option>中小企業10〜300名</option>
+          <option>大企業300名〜</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>理想のパートナーシップ <span class="required">*</span><span class="hint">パートナーに求める役割・協力内容</span></label>
+        <textarea name="クライアントの課題" placeholder="例：営業人材をシェアしたい、マーケティング支援をしてほしい、新規市場開拓を一緒にしたい、システム開発をサポートしてほしい" required></textarea>
+      </div>
+
+      <!-- ===== 強み・課題・ポジション ===== -->
+      <div class="section-title">強み・課題・ポジション</div>
+
+      <div class="field">
+        <label>バリューチェーン上の位置 <span class="required">*</span><span class="hint">（メイン1つ＋サブ最大2つ選択）</span></label>
+        <div class="checkbox-group" id="valueChain">
+          <label class="checkbox-item"><input type="checkbox" name="バリューチェーン位置" value="認知・ブランディング">認知・ブランディング</label>
+          <label class="checkbox-item"><input type="checkbox" name="バリューチェーン位置" value="集客・マーケティング">集客・マーケティング</label>
+          <label class="checkbox-item"><input type="checkbox" name="バリューチェーン位置" value="リード獲得・見込み客育成">リード獲得・見込み客育成</label>
+          <label class="checkbox-item"><input type="checkbox" name="バリューチェーン位置" value="営業・提案・クロージング">営業・提案・クロージング</label>
+          <label class="checkbox-item"><input type="checkbox" name="バリューチェーン位置" value="制作・開発・導入">制作・開発・導入</label>
+          <label class="checkbox-item"><input type="checkbox" name="バリューチェーン位置" value="運用・保守・継続支援">運用・保守・継続支援</label>
+          <label class="checkbox-item"><input type="checkbox" name="バリューチェーン位置" value="教育・研修・人材育成">教育・研修・人材育成</label>
+          <label class="checkbox-item"><input type="checkbox" name="バリューチェーン位置" value="経営・戦略・資金調達">経営・戦略・資金調達</label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>自分のビジネスの強み <span class="required">*</span><span class="hint">（該当するものを選択 + 詳細を記入）</span></label>
+        <div class="checkbox-group">
+          <label class="checkbox-item"><input type="checkbox" name="強み_キーワード" value="技術・開発">技術・開発力</label>
+          <label class="checkbox-item"><input type="checkbox" name="強み_キーワード" value="営業・ネットワーク">営業・営業ネットワーク</label>
+          <label class="checkbox-item"><input type="checkbox" name="強み_キーワード" value="業界知見">業界知見・実績</label>
+          <label class="checkbox-item"><input type="checkbox" name="強み_キーワード" value="ブランド">ブランド・認知度</label>
+          <label class="checkbox-item"><input type="checkbox" name="強み_キーワード" value="コンテンツ">コンテンツ・教材</label>
+          <label class="checkbox-item"><input type="checkbox" name="強み_キーワード" value="その他">その他</label>
+        </div>
+        <textarea name="強み" placeholder="例：業界10年のネットワーク、独自のAI分析ツール、大手メーカーとの取引実績、月1000名のメルマガ読者" required></textarea>
+      </div>
+
+      <div class="field">
+        <label>課題・足りないと感じていること <span class="required">*</span><span class="hint">（該当するものを選択 + 詳細を記入）</span></label>
+        <div class="checkbox-group">
+          <label class="checkbox-item"><input type="checkbox" name="課題_キーワード" value="営業・マーケティング">営業・マーケティング力</label>
+          <label class="checkbox-item"><input type="checkbox" name="課題_キーワード" value="技術・開発">技術・開発力</label>
+          <label class="checkbox-item"><input type="checkbox" name="課題_キーワード" value="営業ネットワーク">営業ネットワーク・顧客基盤</label>
+          <label class="checkbox-item"><input type="checkbox" name="課題_キーワード" value="資金・リソース">資金・人材・リソース</label>
+          <label class="checkbox-item"><input type="checkbox" name="課題_キーワード" value="業界知見">業界知見・実績</label>
+          <label class="checkbox-item"><input type="checkbox" name="課題_キーワード" value="その他">その他</label>
+        </div>
+        <textarea name="課題足りないもの" placeholder="例：新規開拓の営業人材が足りない、マーケティングノウハウがない、大企業とのネットワークがない、開発リソースが不足" required></textarea>
+      </div>
+
+      <!-- ===== 連絡先・その他 ===== -->
+      <div class="section-title">連絡先・その他</div>
+
+      <div class="field">
+        <label>メールアドレス <span class="required">*</span></label>
+        <input type="email" name="メール" placeholder="例：info@company.jp" required>
+      </div>
+
+      <div class="field">
+        <label>LINE ID <span class="hint">（オプション）</span></label>
+        <input type="text" name="LINE_ID" placeholder="例：@yamada_taro">
+      </div>
+
+      <div class="field">
+        <label>Facebook URL <span class="hint">（オプション）</span></label>
+        <input type="url" name="Facebook_URL" placeholder="例：https://www.facebook.com/yamada.taro">
+      </div>
+
+      <div class="error-msg" id="errorMsg">送信中にエラーが発生しました。もう一度お試しください。</div>
+
+      <div class="submit-area">
+        <button type="submit" class="submit-btn" id="submitBtn">申し込む</button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<script>
+  // チェックボックス・ラジオボタンのビジュアル更新
+  document.querySelectorAll('.checkbox-item input[type="checkbox"]').forEach(input => {
+    input.addEventListener('change', function() {
+      this.closest('.checkbox-item').classList.toggle('checked', this.checked);
+    });
+  });
+
+  async function submitForm(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const errorMsg = document.getElementById('errorMsg');
+    btn.disabled = true;
+    btn.textContent = '送信中...';
+    errorMsg.style.display = 'none';
+
+    const formData = new FormData(e.target);
+
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        document.getElementById('registerForm').style.display = 'none';
+        document.getElementById('successScreen').style.display = 'block';
+        document.querySelector('.intro').style.display = 'none';
+      } else {
+        throw new Error(data.error || '不明なエラー');
+      }
+    } catch (err) {
+      errorMsg.textContent = `エラー: ${err.message}`;
+      errorMsg.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = '申し込む';
+    }
+  }
+</script>
+</body>
+</html>

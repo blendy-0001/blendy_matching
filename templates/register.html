@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🤝 協業マッチング 申込フォーム | Blendy Inc.</title>
+  <title>🤝 ブレンドマッチ | パートナーマッチングプラットフォーム</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -93,7 +93,7 @@
     }
     .field textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
 
-    /* チェックボックスグループ */
+    /* チェックボックス/ラジオボタングループ */
     .checkbox-group {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -111,8 +111,21 @@
       font-size: 0.85rem;
     }
     .checkbox-item:hover { border-color: #aaa; background: #fafafa; }
-    .checkbox-item input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: #1a1a1a; }
+    .checkbox-item input[type="checkbox"],
+    .checkbox-item input[type="radio"] { width: 16px; height: 16px; cursor: pointer; accent-color: #1a1a1a; }
     .checkbox-item.checked { border-color: #1a1a1a; background: #f0f0f0; font-weight: 600; }
+    .checkbox-item input[type="radio"]:checked ~ strong,
+    .checkbox-item input[type="radio"]:checked { color: #1a1a1a; }
+
+    /* 7つの型グループの特別なスタイル */
+    .checkbox-group:has(input[type="radio"]) {
+      grid-template-columns: 1fr 1fr;
+    }
+    @media (max-width: 600px) {
+      .checkbox-group:has(input[type="radio"]) {
+        grid-template-columns: 1fr;
+      }
+    }
 
     .submit-area {
       margin-top: 36px;
@@ -164,18 +177,18 @@
 <body>
 
 <header>
-  <h1>🤝 協業マッチング 申込フォーム</h1>
-  <span>Blendy Inc.</span>
+  <h1>🤝 ブレンドマッチ</h1>
+  <span>パートナーマッチング</span>
 </header>
 
 <div class="container">
 
   <div class="intro">
-    <h2>はじめに</h2>
+    <h2>ブレンドマッチへようこそ</h2>
     <p>
-      Blendy Inc. の協業マッチングサービスへようこそ。<br>
-      以下のフォームにご記入いただくと、AIが月2回、最適な協業相手をご紹介します。<br>
-      正確に入力していただくほど、マッチング精度が高まります。
+      対等なパートナーシップで、事業を拡大させる相手を見つける。<br>
+      発注でもなく、受注でもない。相互に成長できるパートナーを、月2回ご紹介します。<br>
+      以下のフォームに入力いただくと、最適な協業パートナーがマッチングされます。
     </p>
   </div>
 
@@ -203,14 +216,18 @@
       </div>
 
       <div class="field">
-        <label>会社名・屋号 <span class="hint">任意</span></label>
-        <input type="text" name="会社名" placeholder="例：株式会社〇〇">
+        <label>会社名・屋号 <span class="required">*</span></label>
+        <input type="text" name="会社名" placeholder="例：株式会社〇〇" required>
       </div>
 
-      <div class="section-title">事業について</div>
+      <div class="section-title">自社について</div>
 
       <div class="field">
-        <label>業種カテゴリ <span class="required">*</span></label>
+        <label>
+          自社の業種カテゴリ
+          <span class="required">*</span>
+          <span class="hint">あなたの企業が属する業種</span>
+        </label>
         <select name="業種カテゴリ" required>
           <option value="">選択してください</option>
           <option>IT・システム開発</option>
@@ -248,15 +265,26 @@
         </select>
       </div>
 
-      <div class="section-title">クライアント情報</div>
+      <div class="section-title">協業の方向性</div>
+
+      <!-- 協業タイプは課題感と強みから自動判定するため、フォームでの選択は不要 -->
+      <p style="font-size: 0.9rem; color: #666; background: #f9f9f9; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
+        💡 <strong>協業タイプについて：</strong><br>
+        あなたの課題感・強み・バリューチェーン位置から、最適な協業パートナータイプを当社が分析・推奨します。<br>
+        以下の項目をご入力いただくだけで、AI がマッチします。
+      </p>
 
       <div class="field">
-        <label>エンドクライアントの業界 <span class="required">*</span></label>
-        <input type="text" name="エンドクライアント業界" placeholder="例：製造業、小売業、医療・介護" required>
+        <label>
+          対象とする企業層・業界
+          <span class="required">*</span>
+          <span class="hint">パートナーとして一緒に市場開拓したい企業の業界</span>
+        </label>
+        <input type="text" name="エンドクライアント業界" placeholder="例：製造業、小売業、医療・介護、不動産業、金融業" required>
       </div>
 
       <div class="field">
-        <label>エンドクライアントの規模 <span class="required">*</span></label>
+        <label>企業規模 <span class="required">*</span><span class="hint">パートナーの対象企業規模</span></label>
         <select name="エンドクライアント規模" required>
           <option value="">選択してください</option>
           <option>個人・フリーランス</option>
@@ -267,14 +295,14 @@
       </div>
 
       <div class="field">
-        <label>クライアントが抱える主な課題 <span class="required">*</span></label>
-        <textarea name="クライアントの課題" placeholder="例：新規顧客獲得が難しい、営業リソースが不足している、DX推進の方法がわからない" required></textarea>
+        <label>理想のパートナーシップ <span class="required">*</span><span class="hint">パートナーに求める役割・協力内容</span></label>
+        <textarea name="クライアントの課題" placeholder="例：営業人材をシェアしたい、マーケティング支援をしてほしい、新規市場開拓を一緒にしたい、システム開発をサポートしてほしい" required></textarea>
       </div>
 
       <div class="section-title">強み・課題・ポジション</div>
 
       <div class="field">
-        <label>バリューチェーン上の位置 <span class="required">*</span><span class="hint">（複数選択可）</span></label>
+        <label>バリューチェーン上の位置 <span class="required">*</span><span class="hint">（メイン1つ＋サブ最大2つ選択）</span></label>
         <div class="checkbox-group" id="valueChain">
           <label class="checkbox-item"><input type="checkbox" name="バリューチェーン位置" value="認知・ブランディング">認知・ブランディング</label>
           <label class="checkbox-item"><input type="checkbox" name="バリューチェーン位置" value="集客・マーケティング">集客・マーケティング</label>
@@ -288,36 +316,46 @@
       </div>
 
       <div class="field">
-        <label>自分のビジネスの強み <span class="required">*</span></label>
-        <textarea name="強み" placeholder="例：業界10年のネットワーク、独自のAI分析ツール、大手メーカーとの取引実績" required></textarea>
-      </div>
-
-      <div class="field">
-        <label>課題・足りないと感じていること <span class="required">*</span></label>
-        <textarea name="課題足りないもの" placeholder="例：新規開拓の営業力が弱い、技術力はあるが販路がない、マーケティングノウハウが不足" required></textarea>
-      </div>
-
-      <div class="field">
-        <label>保有アセット <span class="hint">（複数選択可）</span></label>
+        <label>自分のビジネスの強み <span class="required">*</span><span class="hint">（該当するものを選択 + 詳細を記入）</span></label>
         <div class="checkbox-group">
-          <label class="checkbox-item"><input type="checkbox" name="保有アセット" value="独自技術・ノウハウ・IP">独自技術・ノウハウ・IP</label>
-          <label class="checkbox-item"><input type="checkbox" name="保有アセット" value="特定業界の顧客基盤・チャネル">特定業界の顧客基盤・チャネル</label>
-          <label class="checkbox-item"><input type="checkbox" name="保有アセット" value="ブランド・メディア・発信力">ブランド・メディア・発信力</label>
-          <label class="checkbox-item"><input type="checkbox" name="保有アセット" value="実務人材・チーム・リソース">実務人材・チーム・リソース</label>
-          <label class="checkbox-item"><input type="checkbox" name="保有アセット" value="資金・投資できる余力">資金・投資できる余力</label>
-          <label class="checkbox-item"><input type="checkbox" name="保有アセット" value="コンテンツ・教材・プログラム">コンテンツ・教材・プログラム</label>
+          <label class="checkbox-item"><input type="checkbox" name="強み_キーワード" value="技術・開発">技術・開発力</label>
+          <label class="checkbox-item"><input type="checkbox" name="強み_キーワード" value="営業・ネットワーク">営業・営業ネットワーク</label>
+          <label class="checkbox-item"><input type="checkbox" name="強み_キーワード" value="業界知見">業界知見・実績</label>
+          <label class="checkbox-item"><input type="checkbox" name="強み_キーワード" value="ブランド">ブランド・認知度</label>
+          <label class="checkbox-item"><input type="checkbox" name="強み_キーワード" value="コンテンツ">コンテンツ・教材</label>
+          <label class="checkbox-item"><input type="checkbox" name="強み_キーワード" value="その他">その他</label>
         </div>
-      </div>
-
-      <div class="section-title">連絡先</div>
-
-      <div class="field">
-        <label>LINE ID <span class="required">*</span></label>
-        <input type="text" name="LINE_ID" placeholder="例：@yamada_taro" required>
+        <textarea name="強み" placeholder="例：業界10年のネットワーク、独自のAI分析ツール、大手メーカーとの取引実績、月1000名のメルマガ読者" required></textarea>
       </div>
 
       <div class="field">
-        <label>Facebook URL <span class="hint">任意</span></label>
+        <label>課題・足りないと感じていること <span class="required">*</span><span class="hint">（該当するものを選択 + 詳細を記入）</span></label>
+        <div class="checkbox-group">
+          <label class="checkbox-item"><input type="checkbox" name="課題_キーワード" value="営業・マーケティング">営業・マーケティング力</label>
+          <label class="checkbox-item"><input type="checkbox" name="課題_キーワード" value="技術・開発">技術・開発力</label>
+          <label class="checkbox-item"><input type="checkbox" name="課題_キーワード" value="営業ネットワーク">営業ネットワーク・顧客基盤</label>
+          <label class="checkbox-item"><input type="checkbox" name="課題_キーワード" value="資金・リソース">資金・人材・リソース</label>
+          <label class="checkbox-item"><input type="checkbox" name="課題_キーワード" value="業界知見">業界知見・実績</label>
+          <label class="checkbox-item"><input type="checkbox" name="課題_キーワード" value="その他">その他</label>
+        </div>
+        <textarea name="課題足りないもの" placeholder="例：新規開拓の営業人材が足りない、マーケティングノウハウがない、大企業とのネットワークがない、開発リソースが不足" required></textarea>
+      </div>
+
+
+      <div class="section-title">連絡先・その他</div>
+
+      <div class="field">
+        <label>メールアドレス <span class="required">*</span></label>
+        <input type="email" name="メール" placeholder="例：info@company.jp" required>
+      </div>
+
+      <div class="field">
+        <label>LINE ID <span class="hint">（オプション）</span></label>
+        <input type="text" name="LINE_ID" placeholder="例：@yamada_taro">
+      </div>
+
+      <div class="field">
+        <label>Facebook URL <span class="hint">（オプション）</span></label>
         <input type="url" name="Facebook_URL" placeholder="例：https://www.facebook.com/yamada.taro">
       </div>
 
@@ -332,9 +370,16 @@
 </div>
 
 <script>
-  // チェックボックスのビジュアル更新
-  document.querySelectorAll('.checkbox-item input[type="checkbox"]').forEach(cb => {
-    cb.addEventListener('change', function() {
+  // チェックボックス・ラジオボタンのビジュアル更新
+  document.querySelectorAll('.checkbox-item input[type="checkbox"], .checkbox-item input[type="radio"]').forEach(input => {
+    input.addEventListener('change', function() {
+      // ラジオボタンの場合、同じグループの他のアイテムの checked クラスを削除
+      if (this.type === 'radio') {
+        this.closest('.checkbox-group').querySelectorAll('.checkbox-item').forEach(item => {
+          item.classList.remove('checked');
+        });
+      }
+      // 現在のアイテムに checked クラスを追加
       this.closest('.checkbox-item').classList.toggle('checked', this.checked);
     });
   });

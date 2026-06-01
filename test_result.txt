@@ -1,0 +1,27 @@
+Starting test data generation...
+Time: 2026-05-27 21:03:26
+
+[NG] [ 1] Test Company A - Error: Registration failed: RetryError
+[NG] [ 2] Test Company B - Error: Registration failed: RetryError
+[NG] [ 3] Test Company C - Error: Registration failed: RetryError
+[NG] [ 4] Test Company D - Error: Registration failed: RetryError
+[NG] [ 5] Test Company E - Error: Registration failed: RetryError
+[NG] [ 6] Test Company F - Error: Registration failed: RetryError
+[NG] [ 7] Test Company G - Error: Registration failed: RetryError
+[NG] [ 8] Test Company H - Error: Registration failed: RetryError
+[NG] [ 9] Test Company I - Error: Registration failed: RetryError
+[NG] [10] Test Company J - Error: Registration failed: RetryError
+[NG] [11] Test Company K - Error: Registration failed: RetryError
+[NG] [12] Test Company L - Error: Registration failed: RetryError
+[NG] [13] Test Company M - Error: Registration failed: RetryError
+[NG] [14] Test Company N - Error: Registration failed: RetryError
+[NG] [15] Test Company O - Error: Registration failed: RetryError
+[NG] [16] Test Company P - Error: Registration failed: RetryError
+[NG] [17] Test Company Q - Error: Registration failed: RetryError
+[NG] [18] Test Company R - Error: Registration failed: RetryError
+[NG] [19] Test Company S - Error: Registration failed: RetryError
+[NG] [20] Test Company T - Error: Registration failed: RetryError
+
+============================================================
+Result: Success 0, Error 20
+============================================================

@@ -234,6 +234,47 @@
       text-decoration: none;
     }
     .notion-link a:hover { color: #333; }
+
+    /* マッチングされなかった人セクション */
+    .unmatched-section {
+      margin-top: 40px;
+      background: white;
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    .unmatched-section h3 {
+      font-size: 1.1rem;
+      margin-bottom: 20px;
+      color: #1a1a1a;
+    }
+    .unmatched-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    .unmatched-table th {
+      background: #f5f5f0;
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid #ddd;
+      color: #333;
+    }
+    .unmatched-table td {
+      padding: 12px;
+      border-bottom: 1px solid #eee;
+      color: #555;
+    }
+    .unmatched-table tr:hover {
+      background: #f9f9f9;
+    }
+    .unmatched-empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: #999;
+      font-size: 0.95rem;
+    }
   </style>
 </head>
 <body>
@@ -251,7 +292,7 @@
       <h3>📋 新規メンバー申込フォーム</h3>
       <p>このURLを参加者にシェアしてください。入力内容はNotionに自動で登録されます。</p>
     </div>
-    <a href="/register" target="_blank" class="register-link-btn">フォームを開く →</a>
+    <a href="/register-multiactivity" target="_blank" class="register-link-btn">フォームを開く →</a>
   </div>
 
   <!-- 統計カード -->
@@ -278,6 +319,25 @@
   <div class="action-area">
     <h2>AIマッチングを実行する</h2>
     <p>メンバーリストを読み込み、最適なペアをAIが自動で選定します</p>
+
+    <!-- 目標マッチング組数入力 -->
+    <div style="margin-bottom: 20px;">
+      <label for="maxMatches" style="display: block; margin-bottom: 8px; font-size: 0.95rem; font-weight: 500; color: #333;">
+        目標マッチング組数：
+      </label>
+      <input
+        type="number"
+        id="maxMatches"
+        min="1"
+        max="100"
+        value="15"
+        style="width: 120px; padding: 10px 12px; font-size: 1rem; border: 2px solid #ddd; border-radius: 8px; outline: none; transition: border-color 0.2s;"
+        onfocus="this.style.borderColor='#1a1a1a'"
+        onblur="this.style.borderColor='#ddd'"
+      />
+      <span style="margin-left: 8px; color: #888; font-size: 0.9rem;">組</span>
+    </div>
+
     <button class="run-btn" id="runBtn" onclick="startMatching()">
       ▶ マッチング実行
     </button>
@@ -325,14 +385,15 @@
     const btn = document.getElementById('runBtn');
     const progressBar = document.getElementById('progressBar');
     const progressText = document.getElementById('progressText');
+    const maxMatches = parseInt(document.getElementById('maxMatches').value) || 15;
 
     btn.disabled = true;
     progressBar.style.display = 'block';
     document.getElementById('resultsArea').style.display = 'none';
     document.getElementById('thisTimeCount').innerHTML = '--<span class="unit"> 組</span>';
 
-    // マッチング開始リクエスト
-    await fetch('/api/run-matching', { method: 'POST' });
+    // マッチング開始リクエスト（max_matches パラメータを送信）
+    await fetch(`/api/run-matching?max_matches=${maxMatches}`, { method: 'POST' });
 
     // 進捗をポーリング
     const poll = setInterval(async () => {
@@ -345,7 +406,15 @@
         clearInterval(poll);
         btn.disabled = false;
 
-        if (data.results && data.results.length > 0) {
+        // 旧形式（配列）と新形式（{matched, unmatched}）の両方に対応
+        const hasResults =
+          (Array.isArray(data.results) && data.results.length > 0) ||
+          (data.results && data.results.matched && data.results.matched.length > 0);
+
+        if (hasResults) {
+          showResults(data.results);
+        } else if (data.results && data.results.unmatched && data.results.unmatched.length > 0) {
+          // マッチング結果がないがマッチングされなかった人がいる場合
           showResults(data.results);
         } else {
           progressBar.style.display = 'none';
@@ -360,11 +429,21 @@
     const list = document.getElementById('resultsList');
     const title = document.getElementById('resultsTitle');
 
-    title.textContent = `📋 今回のマッチング結果 （${results.length}組）`;
-    document.getElementById('thisTimeCount').innerHTML =
-      `${results.length}<span class="unit"> 組</span>`;
+    // results が新形式 {matched, unmatched} かどうか判定
+    let matchedResults = results;
+    let unmatchedMembers = [];
 
-    list.innerHTML = results.map((m, i) => `
+    if (results && results.matched) {
+      matchedResults = results.matched;
+      unmatchedMembers = results.unmatched || [];
+    }
+
+    title.textContent = `📋 今回のマッチング結果 （${matchedResults.length}組）`;
+    document.getElementById('thisTimeCount').innerHTML =
+      `${matchedResults.length}<span class="unit"> 組</span>`;
+
+    // マッチング結果を表示
+    let html = matchedResults.map((m, i) => `
       <div class="match-card">
         <div class="match-header">
           <div class="match-names">
@@ -387,6 +466,52 @@
         </div>
       </div>
     `).join('');
+
+    // マッチングされなかった人のセクション
+    if (unmatchedMembers && unmatchedMembers.length > 0) {
+      html += `
+        <div class="unmatched-section">
+          <h3>⚠️ マッチングされなかった人 (${unmatchedMembers.length}名)</h3>
+          <p style="font-size: 0.85rem; color: #888; margin-bottom: 16px;">
+            ※ 次回のマッチング対象、または手動マッチングの対象者です
+          </p>
+          <table class="unmatched-table">
+            <thead>
+              <tr>
+                <th>名前</th>
+                <th>会社名</th>
+                <th>業種</th>
+                <th>主力サービス</th>
+                <th>強み</th>
+                <th>課題・足りないもの</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${unmatchedMembers.map(m => `
+                <tr>
+                  <td><strong>${m['名前'] || '-'}</strong></td>
+                  <td>${m['会社名'] || '-'}</td>
+                  <td>${m['業種カテゴリ'] || '-'}</td>
+                  <td>${m['主力サービス'] || '-'}</td>
+                  <td>${m['強み'] || '-'}</td>
+                  <td>${m['課題・足りないもの'] || '-'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    } else if (matchedResults.length > 0) {
+      html += `
+        <div class="unmatched-section">
+          <div class="unmatched-empty">
+            ✅ 全員がマッチングされました！
+          </div>
+        </div>
+      `;
+    }
+
+    list.innerHTML = html;
 
     area.style.display = 'block';
     document.getElementById('progressBar').style.display = 'none';

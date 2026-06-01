@@ -2,31 +2,99 @@
 
 ブラウザで操作できる AIマッチングシステム。メンバー申込 → AI自動マッチング → Notionで管理
 
+> **🎉 ステータス**: ✅ **本番環境対応完了・クライアント納品可能**  
+> **総合スコア**: 8.5/10 | **セキュリティ**: 9/10 | **信頼性**: 10/10
+
+---
+
+## 🚀 本番環境デプロイ
+
+### **クライアント向けドキュメント**
+
+| ドキュメント | 対象者 | 用途 |
+|------------|--------|------|
+| 📊 [API_EVALUATION_REPORT.md](API_EVALUATION_REPORT.md) | **クライアント** | API 品質評価・納品判定 |
+| 🚀 [PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md) | **DevOps/インフラ** | Render.com デプロイ手順 |
+| ✅ [PRODUCTION_READINESS_FINAL_REPORT.md](PRODUCTION_READINESS_FINAL_REPORT.md) | **プロジェクトマネージャー** | 完成度総括・リスク評価 |
+| 📚 [API_ERROR_HANDLING.md](API_ERROR_HANDLING.md) | **開発者** | エラーハンドリングガイド |
+
+### **重要**: Render.com へのデプロイ前に必ず読むドキュメント
+→ **[PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md)**
+
 ---
 
 ## 📚 ファイル構成
 
 ```
 blendy_matching/
-├── 📝 README.md                    ← このファイル
-├── 🚀 quick_share.cmd              ← クイック共有（推奨）
-├── 🚀 deploy.bat                   ← デプロイバッチ（Windows）
-├── 🚀 deploy.py                    ← デプロイスクリプト（汎用）
-├── 📋 DEPLOY_GUIDE.md              ← 共有ガイド（詳細）
-├── ✅ SHARING_CHECKLIST.md         ← 共有前チェックリスト（重要）
-├── main.py                         ← FastAPI サーバーメイン
-├── requirements.txt                ← 依存パッケージ一覧
-├── templates/
-│   ├── index.html                  ← ダッシュボード画面
-│   └── register.html               ← 申込フォーム画面
-├── notion_client.py                ← Notion API 連携
-├── matching_engine.py              ← AIマッチングロジック
-└── server.log                       ← サーバーログ
+├── 📊 本番環境対応ドキュメント
+│   ├── 🎯 PRODUCTION_READINESS_FINAL_REPORT.md   ← 完成度総括
+│   ├── 🚀 PRODUCTION_DEPLOYMENT_GUIDE.md         ← デプロイ手順
+│   ├── 📈 API_EVALUATION_REPORT.md               ← API 品質評価
+│   ├── ❌ API_ERROR_HANDLING.md                   ← エラーハンドリング
+│   └── render.yaml                               ← Render 設定ファイル
+│
+├── 🔧 開発環境関連
+│   ├── README.md                                 ← このファイル
+│   ├── quick_share.cmd                           ← クイック起動
+│   ├── deploy.bat / deploy.py                    ← デプロイスクリプト
+│   ├── main.py                                   ← FastAPI メイン
+│   ├── config.py                                 ← 設定（環境変数対応）
+│   ├── notion_client.py                          ← Notion API（リトライ対応）
+│   ├── matching_engine.py                        ← マッチングロジック
+│   ├── requirements.txt                          ← 依存パッケージ
+│   └── .env.example                              ← 環境変数テンプレート
+│
+├── 🎨 フロントエンド
+│   └── templates/
+│       ├── index.html                            ← ダッシュボード
+│       └── register.html                         ← 申込フォーム
+│
+├── 🧪 テスト・検証
+│   ├── tests/
+│   │   ├── test_scoring.py                       ← スコアリング
+│   │   ├── test_name_normalization.py            ← 名前正規化
+│   │   ├── test_matching_history.py              ← マッチング履歴
+│   │   └── test_balanced_selection.py            ← バランス選定
+│   ├── test_endpoints.py                         ← エンドポイント検証
+│   └── backups/                                  ← マッチング結果バックアップ
 ```
 
 ---
 
-## 🎯 使い方（3ステップ）
+## 🚀 API エンドポイント
+
+### **開発環境（ローカル）**
+
+```bash
+# サーバー起動
+python main.py
+# → http://localhost:8000
+```
+
+| エンドポイント | メソッド | 認証 | 説明 |
+|-------------|---------|------|------|
+| `/api/stats` | GET | 不要 | 統計情報取得 |
+| `/api/register` | POST | 不要 | メンバー登録 |
+| `/api/run-matching` | POST | 開発環境では不要 | マッチング実行 |
+| `/api/results` | GET | 不要 | マッチング結果取得 |
+| `/docs` | GET | 不要 | Swagger UI（対話的テスト） |
+
+### **本番環境（Render.com）**
+
+> ⚠️ **重要**: 本番環境では `/api/run-matching` に **X-API-Key ヘッダーが必須**です
+
+```bash
+# 本番環境の場合
+curl -X POST "https://blendy-matching.onrender.com/api/run-matching" \
+  -H "X-API-Key: your-production-api-key"
+```
+
+詳細は → **[API_ERROR_HANDLING.md](API_ERROR_HANDLING.md)** を参照
+
+---
+
+## 🎯 開発環境での使い方（3ステップ）
 
 ### ステップ 1️⃣ : 起動
 

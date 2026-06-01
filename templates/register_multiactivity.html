@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🤝 ブレンドマッチ | パートナーマッチングプラットフォーム</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Yu Gothic', sans-serif;
+      background: #f5f5f0;
+      color: #2d2d2d;
+      min-height: 100vh;
+    }
+    header {
+      background: #1a1a1a;
+      color: white;
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 { font-size: 1.2rem; font-weight: 600; }
+    header span { font-size: 0.85rem; color: #999; }
+
+    .container { max-width: 800px; margin: 0 auto; padding: 40px 20px 80px; }
+
+    .intro {
+      background: white;
+      border-radius: 16px;
+      padding: 28px 32px;
+      margin-bottom: 32px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    .intro h2 { font-size: 1.2rem; margin-bottom: 10px; }
+    .intro p { font-size: 0.9rem; color: #666; line-height: 1.8; }
+
+    .form-card {
+      background: white;
+      border-radius: 16px;
+      padding: 36px 32px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: #888;
+      text-transform: uppercase;
+      margin: 32px 0 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #eee;
+    }
+    .section-title:first-child { margin-top: 0; }
+
+    .field { margin-bottom: 20px; }
+    .field label {
+      display: block;
+      font-size: 0.88rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #333;
+    }
+    .field label .required {
+      color: #e84040;
+      margin-left: 4px;
+    }
+    .field label .hint {
+      font-weight: 400;
+      color: #999;
+      font-size: 0.8rem;
+      margin-left: 6px;
+    }
+    .field input[type="text"],
+    .field input[type="email"],
+    .field input[type="url"],
+    .field select,
+    .field textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      transition: border-color 0.2s;
+      background: white;
+    }
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      outline: none;
+      border-color: #1a1a1a;
+    }
+    .field textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+
+    /* チェックボックス/ラジオボタングループ */
+    .checkbox-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-size: 0.85rem;
+    }
+    .checkbox-item:hover { border-color: #aaa; background: #fafafa; }
+    .checkbox-item input[type="checkbox"],
+    .checkbox-item input[type="radio"] { width: 16px; height: 16px; cursor: pointer; accent-color: #1a1a1a; }
+    .checkbox-item.checked { border-color: #1a1a1a; background: #f0f0f0; font-weight: 600; }
+
+    /* AI推測表示ボックス */
+    .ai-inference-box {
+      background: #f0f8ff;
+      border: 1.5px solid #add8e6;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+      color: #0066cc;
+    }
+    .ai-inference-box strong { color: #004999; }
+
+    /* アクティビティブロック */
+    .activity-block {
+      background: #fafafa;
+      border: 2px solid #e8e8e8;
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin-bottom: 24px;
+      transition: all 0.2s;
+    }
+    .activity-block:hover {
+      border-color: #d0d0d0;
+      background: #fff;
+    }
+
+    .activity-header {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 18px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #d0d0d0;
+    }
+
+    .activity-subsection {
+      margin-top: 18px;
+    }
+    .activity-subsection-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #555;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      letter-spacing: 0.05em;
+    }
+
+    .add-activity-btn {
+      background: #f5f5f5;
+      border: 2px dashed #ccc;
+      color: #1a1a1a;
+      padding: 14px 24px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+      margin-bottom: 24px;
+    }
+    .add-activity-btn:hover {
+      background: #eee;
+      border-color: #999;
+    }
+
+    .activity-block.hidden {
+      display: none;
+    }
+
+    .submit-area {
+      margin-top: 36px;
+      text-align: center;
+    }
+    .submit-btn {
+      background: #1a1a1a;
+      color: white;
+      border: none;
+      padding: 16px 64px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.05em;
+    }
+    .submit-btn:hover { background: #333; transform: translateY(-1px); }
+    .submit-btn:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+
+    .success-screen {
+      display: none;
+      text-align: center;
+      padding: 60px 20px;
+    }
+    .success-screen .emoji { font-size: 4rem; margin-bottom: 20px; }
+    .success-screen h2 { font-size: 1.4rem; margin-bottom: 12px; }
+    .success-screen p { color: #666; font-size: 0.95rem; line-height: 1.8; }
+
+    .error-msg {
+      display: none;
+      background: #fff0f0;
+      border: 1px solid #ffcccc;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 0.88rem;
+      color: #c00;
+      margin-top: 16px;
+    }
+
+    @media (max-width: 600px) {
+      .container { padding: 20px 16px 60px; }
+      .form-card { padding: 24px 20px; }
+      .checkbox-group { grid-template-columns: 1fr; }
+      .activity-block { padding: 16px 14px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🤝 ブレンドマッチ</h1>
+  <span>パートナーマッチング</span>
+</header>
+
+<div class="container">
+
+  <div class="intro">
+    <h2>ブレンドマッチへようこそ</h2>
+    <p>
+      対等なパートナーシップで、事業を拡大させる相手を見つける。<br>
+      複数の事業アクティビティをお持ちの場合は、それぞれ記入することでマッチング精度が向上します。<br>
+      以下のフォームに入力いただくと、最適な協業パートナーがマッチングされます。
+    </p>
+  </div>
+
+  <div class="form-card">
+
+    <div class="success-screen" id="successScreen">
+      <div class="emoji">🎉</div>
+      <h2>申込が完了しました！</h2>
+      <p>
+        登録ありがとうございます。<br>
+        月2回のマッチング結果をLINEまたはFacebookでご連絡します。<br>
+        しばらくお待ちください。
+      </p>
+    </div>
+
+    <form id="registerForm" onsubmit="submitForm(event)">
+
+      <!-- ===== 基本情報（会社共通） ===== -->
+      <div class="section-title">基本情報</div>
+
+      <div class="field">
+        <label>お名前 <span class="required">*</span></label>
+        <input type="text" name="名前" placeholder="例：山田 太郎" required>
+      </div>
+
+      <div class="field">
+        <label>会社名・屋号 <span class="required">*</span></label>
+        <input type="text" name="会社名" placeholder="例：株式会社〇〇" required>
+      </div>
+
+      <div class="field">
+        <label>
+          自社の業種カテゴリ
+          <span class="required">*</span>
+          <span class="hint">企業全体の大分類（アクティビティごとの詳細は後で入力）</span>
+        </label>
+        <select name="業種カテゴリ" required>
+          <option value="">選択してください</option>
+          <option>IT・システム開発</option>
+          <option>マーケティング・広告</option>
+          <option>コンサルティング</option>
+          <option>営業・販売支援</option>
+          <option>教育・研修</option>
+          <option>医療・福祉・介護</option>
+          <option>製造・メーカー</option>
+          <option>不動産・建設</option>
+          <option>士業</option>
+          <option>クリエイティブ</option>
+          <option>その他</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>業種の詳細 <span class="required">*</span></label>
+        <input type="text" name="業種詳細" placeholder="例：SaaS開発、BtoB向けコンサルティング" required>
+      </div>
+
+      <div class="field">
+        <label>事業フェーズ <span class="required">*</span></label>
+        <select name="事業フェーズ" required>
+          <option value="">選択してください</option>
+          <option>アイデア段階</option>
+          <option>立上げ期</option>
+          <option>成長期</option>
+          <option>安定期</option>
+        </select>
+      </div>
+
+      <!-- ===== 事業アクティビティ ===== -->
+      <div class="section-title">事業アクティビティ</div>
+
+      <div class="ai-inference-box">
+        💡 <strong>複数アクティビティについて：</strong><br>
+        貴社が複数の異なる事業活動を展開している場合、それぞれを個別に記載ください。<br>
+        例：人材紹介 + 交流会主催、IT向けコンサル + 製造業向けコンサル など<br>
+        各アクティビティごとに最適なパートナーがマッチングされます。
+      </div>
+
+      <div id="activitiesContainer">
+
+        <!-- ===== Activity 1 ===== -->
+        <div class="activity-block" id="activity_1">
+          <div class="activity-header">📌 事業アクティビティ #1</div>
+
+          <div class="field">
+            <label>アクティビティ名 <span class="required">*</span></label>
+            <input type="text" name="活動1_名称" placeholder="例：人材紹介、交流会主催、コンサルティング" required>
+          </div>
+
+          <div class="field">
+            <label>サービス・事業内容（このアクティビティについて） <span class="required">*</span></label>
+            <textarea name="活動1_サービス" placeholder="例：採用企業向けエグゼクティブ人材紹介。業界ネットワークを活かし、年間3000万円以上の成約実績。月平均15名の人材紹介。" required></textarea>
+          </div>
+
+          <div class="activity-subsection">
+            <div class="activity-subsection-title">対象クライアント</div>
+
+            <div class="field">
+              <label>このアクティビティの対象業界 <span class="required">*</span></label>
+              <input type="text" name="活動1_対象業界" placeholder="例：製造業、金融業、小売業" required>
+            </div>
+
+            <div class="field">
+              <label>このアクティビティの対象企業規模 <span class="required">*</span></label>
+              <select name="活動1_対象企業規模" required>
+                <option value="">選択してください</option>
+                <option>個人・フリーランス</option>
+                <option>スモールビジネス〜10名</option>
+                <option>中小企業10〜300名</option>
+                <option>大企業300名〜</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="activity-subsection">
+            <div class="activity-subsection-title">このアクティビティでの強み</div>
+
+            <div class="field">
+              <label>該当するものを選択 <span class="required">*</span></label>
+              <div class="checkbox-group">
+                <label class="checkbox-item"><input type="checkbox" name="活動1_強み" value="技術・開発">技術・開発力</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動1_強み" value="営業・ネットワーク">営業・営業ネットワーク</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動1_強み" value="業界知見">業界知見・実績</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動1_強み" value="ブランド">ブランド・認知度</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動1_強み" value="コンテンツ">コンテンツ・教材</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動1_強み" value="その他">その他</label>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>詳細（具体的な強みについて記入） <span class="required">*</span></label>
+              <textarea name="活動1_強み詳細" placeholder="例：業界10年のネットワーク、大手メーカーとの取引実績、月500名のメルマガ読者" required></textarea>
+            </div>
+          </div>
+
+          <div class="activity-subsection">
+            <div class="activity-subsection-title">このアクティビティでの課題・足りないもの</div>
+
+            <div class="field">
+              <label>該当するものを選択 <span class="required">*</span></label>
+              <div class="checkbox-group">
+                <label class="checkbox-item"><input type="checkbox" name="活動1_課題" value="営業・マーケティング">営業・マーケティング力</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動1_課題" value="技術・開発">技術・開発力</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動1_課題" value="営業ネットワーク">営業ネットワーク・顧客基盤</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動1_課題" value="資金・リソース">資金・人材・リソース</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動1_課題" value="業界知見">業界知見・実績</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動1_課題" value="その他">その他</label>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>詳細（具体的な課題について記入） <span class="required">*</span></label>
+              <textarea name="活動1_課題詳細" placeholder="例：新規営業の営業人材が足りない、マーケティングノウハウがない、大企業とのネットワークがない" required></textarea>
+            </div>
+          </div>
+
+          <div class="activity-subsection">
+            <div class="activity-subsection-title">バリューチェーン上の位置</div>
+
+            <div class="field">
+              <label>このアクティビティでのポジション <span class="required">*</span><span class="hint">（複数選択可能）</span></label>
+              <div class="checkbox-group">
+                <label class="checkbox-item"><input type="checkbox" name="活動1_ポジション" value="認知・ブランディング">認知・ブランディング</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動1_ポジション" value="集客・マーケティング">集客・マーケティング</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動1_ポジション" value="リード獲得・見込み客育成">リード獲得・見込み客育成</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動1_ポジション" value="営業・提案・クロージング">営業・提案・クロージング</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動1_ポジション" value="制作・開発・導入">制作・開発・導入</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動1_ポジション" value="運用・保守・継続支援">運用・保守・継続支援</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動1_ポジション" value="教育・研修・人材育成">教育・研修・人材育成</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動1_ポジション" value="経営・戦略・資金調達">経営・戦略・資金調達</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== Activity 2 ===== -->
+        <div class="activity-block" id="activity_2">
+          <div class="activity-header">📌 事業アクティビティ #2 <span style="font-size: 0.75rem; color: #999; font-weight: normal; margin-left: 8px;">（オプション・推奨）</span></div>
+
+          <div class="field">
+            <label>アクティビティ名</label>
+            <input type="text" name="活動2_名称" placeholder="例：人材紹介、交流会主催、コンサルティング">
+          </div>
+
+          <div class="field">
+            <label>サービス・事業内容（このアクティビティについて）</label>
+            <textarea name="活動2_サービス" placeholder="例：フリーランス・起業家向けマッチングイベント。月1回東京・大阪で開催。毎回200名以上が参加。"></textarea>
+          </div>
+
+          <div class="activity-subsection">
+            <div class="activity-subsection-title">対象クライアント</div>
+
+            <div class="field">
+              <label>このアクティビティの対象業界</label>
+              <input type="text" name="活動2_対象業界" placeholder="例：IT業界、スタートアップ、フリーランス">
+            </div>
+
+            <div class="field">
+              <label>このアクティビティの対象企業規模</label>
+              <select name="活動2_対象企業規模">
+                <option value="">選択してください</option>
+                <option>個人・フリーランス</option>
+                <option>スモールビジネス〜10名</option>
+                <option>中小企業10〜300名</option>
+                <option>大企業300名〜</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="activity-subsection">
+            <div class="activity-subsection-title">このアクティビティでの強み</div>
+
+            <div class="field">
+              <label>該当するものを選択</label>
+              <div class="checkbox-group">
+                <label class="checkbox-item"><input type="checkbox" name="活動2_強み" value="技術・開発">技術・開発力</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動2_強み" value="営業・ネットワーク">営業・営業ネットワーク</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動2_強み" value="業界知見">業界知見・実績</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動2_強み" value="ブランド">ブランド・認知度</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動2_強み" value="コンテンツ">コンテンツ・教材</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動2_強み" value="その他">その他</label>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>詳細（具体的な強みについて記入）</label>
+              <textarea name="活動2_強み詳細" placeholder="例：イベント企画の実績、コミュニティ運営のノウハウ、参加者からの信頼度の高さ"></textarea>
+            </div>
+          </div>
+
+          <div class="activity-subsection">
+            <div class="activity-subsection-title">このアクティビティでの課題・足りないもの</div>
+
+            <div class="field">
+              <label>該当するものを選択</label>
+              <div class="checkbox-group">
+                <label class="checkbox-item"><input type="checkbox" name="活動2_課題" value="営業・マーケティング">営業・マーケティング力</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動2_課題" value="技術・開発">技術・開発力</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動2_課題" value="営業ネットワーク">営業ネットワーク・顧客基盤</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動2_課題" value="資金・リソース">資金・人材・リソース</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動2_課題" value="業界知見">業界知見・実績</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動2_課題" value="その他">その他</label>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>詳細（具体的な課題について記入）</label>
+              <textarea name="活動2_課題詳細" placeholder="例：認知度拡大、参加者の質向上、オンラインプラットフォーム構築"></textarea>
+            </div>
+          </div>
+
+          <div class="activity-subsection">
+            <div class="activity-subsection-title">バリューチェーン上の位置</div>
+
+            <div class="field">
+              <label>このアクティビティでのポジション<span class="hint">（複数選択可能）</span></label>
+              <div class="checkbox-group">
+                <label class="checkbox-item"><input type="checkbox" name="活動2_ポジション" value="認知・ブランディング">認知・ブランディング</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動2_ポジション" value="集客・マーケティング">集客・マーケティング</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動2_ポジション" value="リード獲得・見込み客育成">リード獲得・見込み客育成</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動2_ポジション" value="営業・提案・クロージング">営業・提案・クロージング</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動2_ポジション" value="制作・開発・導入">制作・開発・導入</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動2_ポジション" value="運用・保守・継続支援">運用・保守・継続支援</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動2_ポジション" value="教育・研修・人材育成">教育・研修・人材育成</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動2_ポジション" value="経営・戦略・資金調達">経営・戦略・資金調達</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== Activity 3（初期は非表示） ===== -->
+        <div class="activity-block hidden" id="activity_3">
+          <div class="activity-header">📌 事業アクティビティ #3 <span style="font-size: 0.75rem; color: #999; font-weight: normal; margin-left: 8px;">（オプション・推奨）</span></div>
+
+          <div class="field">
+            <label>アクティビティ名</label>
+            <input type="text" name="活動3_名称" placeholder="例：人材紹介、交流会主催、コンサルティング">
+          </div>
+
+          <div class="field">
+            <label>サービス・事業内容（このアクティビティについて）</label>
+            <textarea name="活動3_サービス" placeholder="例："></textarea>
+          </div>
+
+          <div class="activity-subsection">
+            <div class="activity-subsection-title">対象クライアント</div>
+
+            <div class="field">
+              <label>このアクティビティの対象業界</label>
+              <input type="text" name="活動3_対象業界" placeholder="例：製造業、金融業、小売業">
+            </div>
+
+            <div class="field">
+              <label>このアクティビティの対象企業規模</label>
+              <select name="活動3_対象企業規模">
+                <option value="">選択してください</option>
+                <option>個人・フリーランス</option>
+                <option>スモールビジネス〜10名</option>
+                <option>中小企業10〜300名</option>
+                <option>大企業300名〜</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="activity-subsection">
+            <div class="activity-subsection-title">このアクティビティでの強み</div>
+
+            <div class="field">
+              <label>該当するものを選択</label>
+              <div class="checkbox-group">
+                <label class="checkbox-item"><input type="checkbox" name="活動3_強み" value="技術・開発">技術・開発力</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動3_強み" value="営業・ネットワーク">営業・営業ネットワーク</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動3_強み" value="業界知見">業界知見・実績</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動3_強み" value="ブランド">ブランド・認知度</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動3_強み" value="コンテンツ">コンテンツ・教材</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動3_強み" value="その他">その他</label>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>詳細（具体的な強みについて記入）</label>
+              <textarea name="活動3_強み詳細" placeholder="例："></textarea>
+            </div>
+          </div>
+
+          <div class="activity-subsection">
+            <div class="activity-subsection-title">このアクティビティでの課題・足りないもの</div>
+
+            <div class="field">
+              <label>該当するものを選択</label>
+              <div class="checkbox-group">
+                <label class="checkbox-item"><input type="checkbox" name="活動3_課題" value="営業・マーケティング">営業・マーケティング力</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動3_課題" value="技術・開発">技術・開発力</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動3_課題" value="営業ネットワーク">営業ネットワーク・顧客基盤</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動3_課題" value="資金・リソース">資金・人材・リソース</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動3_課題" value="業界知見">業界知見・実績</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動3_課題" value="その他">その他</label>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>詳細（具体的な課題について記入）</label>
+              <textarea name="活動3_課題詳細" placeholder="例："></textarea>
+            </div>
+          </div>
+
+          <div class="activity-subsection">
+            <div class="activity-subsection-title">バリューチェーン上の位置</div>
+
+            <div class="field">
+              <label>このアクティビティでのポジション<span class="hint">（複数選択可能）</span></label>
+              <div class="checkbox-group">
+                <label class="checkbox-item"><input type="checkbox" name="活動3_ポジション" value="認知・ブランディング">認知・ブランディング</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動3_ポジション" value="集客・マーケティング">集客・マーケティング</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動3_ポジション" value="リード獲得・見込み客育成">リード獲得・見込み客育成</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動3_ポジション" value="営業・提案・クロージング">営業・提案・クロージング</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動3_ポジション" value="制作・開発・導入">制作・開発・導入</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動3_ポジション" value="運用・保守・継続支援">運用・保守・継続支援</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動3_ポジション" value="教育・研修・人材育成">教育・研修・人材育成</label>
+                <label class="checkbox-item"><input type="checkbox" name="活動3_ポジション" value="経営・戦略・資金調達">経営・戦略・資金調達</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <button type="button" class="add-activity-btn" id="addActivityBtn" onclick="addActivityBlock()">
+        + 3つ目のアクティビティを追加する
+      </button>
+
+      <div class="field">
+        <label>LINE ID <span class="hint">（オプション）</span></label>
+        <input type="text" name="LINE_ID" placeholder="例：@yamada_taro">
+      </div>
+
+      <div class="field">
+        <label>Facebook URL <span class="required">*</span></label>
+        <input type="url" name="Facebook_URL" placeholder="例：https://www.facebook.com/yamada.taro" required>
+      </div>
+
+      <div class="error-msg" id="errorMsg">送信中にエラーが発生しました。もう一度お試しください。</div>
+
+      <div class="submit-area">
+        <button type="submit" class="submit-btn" id="submitBtn">申し込む</button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.checkbox-item input[type="checkbox"]').forEach(input => {
+    input.addEventListener('change', function() {
+      this.closest('.checkbox-item').classList.toggle('checked', this.checked);
+    });
+  });
+
+  function addActivityBlock() {
+    const activity3 = document.getElementById('activity_3');
+    const btn = document.getElementById('addActivityBtn');
+
+    if (activity3.classList.contains('hidden')) {
+      activity3.classList.remove('hidden');
+      btn.style.display = 'none';
+    }
+  }
+
+  function validateCheckboxes() {
+    // Activity 1 のチェック（必須）
+    const activity1_strengths = document.querySelectorAll('input[name="活動1_強み"]:checked');
+    const activity1_issues = document.querySelectorAll('input[name="活動1_課題"]:checked');
+    const activity1_positions = document.querySelectorAll('input[name="活動1_ポジション"]:checked');
+
+    if (activity1_strengths.length === 0) {
+      return { valid: false, message: 'アクティビティ #1 の「強み」を最低1つ選択してください。' };
+    }
+    if (activity1_issues.length === 0) {
+      return { valid: false, message: 'アクティビティ #1 の「課題」を最低1つ選択してください。' };
+    }
+    if (activity1_positions.length === 0) {
+      return { valid: false, message: 'アクティビティ #1 の「ポジション」を最低1つ選択してください。' };
+    }
+
+    // Activity 2 のチェック（入力されている場合のみ）
+    const activity2_name = document.querySelector('input[name="活動2_名称"]').value.trim();
+    if (activity2_name !== '') {
+      const activity2_strengths = document.querySelectorAll('input[name="活動2_強み"]:checked');
+      const activity2_issues = document.querySelectorAll('input[name="活動2_課題"]:checked');
+      const activity2_positions = document.querySelectorAll('input[name="活動2_ポジション"]:checked');
+
+      if (activity2_strengths.length === 0) {
+        return { valid: false, message: 'アクティビティ #2 の「強み」を最低1つ選択してください。' };
+      }
+      if (activity2_issues.length === 0) {
+        return { valid: false, message: 'アクティビティ #2 の「課題」を最低1つ選択してください。' };
+      }
+      if (activity2_positions.length === 0) {
+        return { valid: false, message: 'アクティビティ #2 の「ポジション」を最低1つ選択してください。' };
+      }
+    }
+
+    // Activity 3 のチェック（表示されている場合のみ）
+    const activity3 = document.getElementById('activity_3');
+    if (!activity3.classList.contains('hidden')) {
+      const activity3_name = document.querySelector('input[name="活動3_名称"]').value.trim();
+      if (activity3_name !== '') {
+        const activity3_strengths = document.querySelectorAll('input[name="活動3_強み"]:checked');
+        const activity3_issues = document.querySelectorAll('input[name="活動3_課題"]:checked');
+        const activity3_positions = document.querySelectorAll('input[name="活動3_ポジション"]:checked');
+
+        if (activity3_strengths.length === 0) {
+          return { valid: false, message: 'アクティビティ #3 の「強み」を最低1つ選択してください。' };
+        }
+        if (activity3_issues.length === 0) {
+          return { valid: false, message: 'アクティビティ #3 の「課題」を最低1つ選択してください。' };
+        }
+        if (activity3_positions.length === 0) {
+          return { valid: false, message: 'アクティビティ #3 の「ポジション」を最低1つ選択してください。' };
+        }
+      }
+    }
+
+    return { valid: true };
+  }
+
+  async function submitForm(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const errorMsg = document.getElementById('errorMsg');
+
+    // チェックボックス検証
+    const validation = validateCheckboxes();
+    if (!validation.valid) {
+      errorMsg.textContent = validation.message;
+      errorMsg.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = '送信中...';
+    errorMsg.style.display = 'none';
+
+    const formData = new FormData(e.target);
+
+    // FormData を JSON に変換
+    const jsonData = {
+      基本情報: {
+        名前: formData.get('名前'),
+        会社名: formData.get('会社名'),
+        業種カテゴリ: formData.get('業種カテゴリ'),
+        業種詳細: formData.get('業種詳細'),
+        事業フェーズ: formData.get('事業フェーズ'),
+        LINE_ID: formData.get('LINE_ID') || '',
+        Facebook_URL: formData.get('Facebook_URL') || ''
+      },
+      活動: []
+    };
+
+    // 活動データを JSON 配列に変換
+    for (let i = 1; i <= 3; i++) {
+      const actName = formData.get(`活動${i}_名称`);
+      if (!actName) continue; // 空の活動はスキップ
+
+      const strengths = [];
+      const challenges = [];
+      const positions = [];
+
+      // チェックボックスの値を取得
+      formData.getAll(`活動${i}_強み`).forEach(v => strengths.push(v));
+      formData.getAll(`活動${i}_課題`).forEach(v => challenges.push(v));
+      formData.getAll(`活動${i}_ポジション`).forEach(v => positions.push(v));
+
+      jsonData.活動.push({
+        名称: actName,
+        サービス: formData.get(`活動${i}_サービス`),
+        対象業界: formData.get(`活動${i}_対象業界`),
+        対象企業規模: formData.get(`活動${i}_対象企業規模`),
+        強み: strengths,
+        強み詳細: formData.get(`活動${i}_強み詳細`) || '',
+        課題: challenges,
+        課題詳細: formData.get(`活動${i}_課題詳細`) || '',
+        ポジション: positions
+      });
+    }
+
+    console.log('[DEBUG JSON] 送信データ:', JSON.stringify(jsonData, null, 2));
+
+    try {
+      const res = await fetch('/api/register-multiactivity/v2', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(jsonData)
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        document.getElementById('registerForm').style.display = 'none';
+        document.getElementById('successScreen').style.display = 'block';
+        document.querySelector('.intro').style.display = 'none';
+      } else {
+        throw new Error(data.error || '不明なエラー');
+      }
+    } catch (err) {
+      errorMsg.textContent = `エラー: ${err.message}`;
+      errorMsg.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = '申し込む';
+    }
+  }
+</script>
+</body>
+</html>

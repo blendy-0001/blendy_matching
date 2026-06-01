@@ -1,0 +1,14 @@
+{
+  "session_name": "",
+  "backup_timestamp": "2026-05-30T17:43:21.426817",
+  "total_matches": 0,
+  "matches": [],
+  "debug_log": [
+    "✓ メンバー取得: 2名",
+    "✓ マッチング履歴取得: 0組",
+    "✓ マッチング実行: 0組",
+    "✓ マッチングされなかった人: 2名",
+    "⚠️ マッチング結果が0件です",
+    "❌ エラー: RetryError[<Future at 0x1f15e362f50 state=finished raised HTTPError>]\nTraceback (most recent call last):\n  File \"C:\\Users\\yo_yo\\AppData\\Roaming\\Python\\Python313\\site-packages\\tenacity\\__init__.py\", line 382, in __call__\n    result = fn(*args, **kwargs)\n  File \"C:\\Users\\yo_yo\\Documents\\blendy_matching\\notion_client.py\", line 410, in save_unmatched_member\n    res.raise_for_status()\n    ~~~~~~~~~~~~~~~~~~~~^^\n  File \"C:\\Users\\yo_yo\\AppData\\Roaming\\Python\\Python313\\site-packages\\requests\\models.py\", line 1024, in raise_for_status\n    raise HTTPError(http_error_msg, response=self)\nrequests.exceptions.HTTPError: 404 Client Error: Not Found for url: https://api.notion.com/v1/pages\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"C:\\Users\\yo_yo\\Documents\\blendy_matching\\main.py\", line 1253, in _run_matching_task\n    save_unmatched_member(session_name, unmatched_member)\n    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\yo_yo\\AppData\\Roaming\\Python\\Python313\\site-packages\\tenacity\\__init__.py\", line 289, in wrapped_f\n    return self(f, *args, **kw)\n  File \"C:\\Users\\yo_yo\\AppData\\Roaming\\Python\\Python313\\site-packages\\tenacity\\__init__.py\", line 379, in __call__\n    do = self.iter(retry_state=retry_state)\n  File \"C:\\Users\\yo_yo\\AppData\\Roaming\\Python\\Python313\\site-packages\\tenacity\\__init__.py\", line 326, in iter\n    raise retry_exc from fut.exception()\ntenacity.RetryError: RetryError[<Future at 0x1f15e362f50 state=finished raised HTTPError>]\n"
+  ]
+}
