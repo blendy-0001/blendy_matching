@@ -20,20 +20,18 @@ services:
 
       # CORS 許可オリジン（本番ドメインに設定）
       - key: ALLOWED_ORIGINS
-        value: https://blendy-matching.onrender.com
+        value: https://blendy-matching-wipa.onrender.com
 
       # 以下は Render.com Secrets（ダッシュボード）で設定
-      # - key: NOTION_API_KEY
-      #   fromSecret: notion_api_key
-      # - key: CLAUDE_API_KEY
-      #   fromSecret: claude_api_key
-      # - key: API_KEY
-      #   fromSecret: api_key
-      # - key: MEMBERS_DB_ID
-      #   fromSecret: members_db_id
-      # - key: MATCHING_HISTORY_DB_ID
-      #   fromSecret: matching_history_db_id
-      # - key: MATCHING_RESULTS_DB_ID
-      #   fromSecret: matching_results_db_id
-      # - key: UNMATCHED_MEMBERS_DB_ID
-      #   fromSecret: unmatched_members_db_id
+      - key: NOTION_API_KEY
+        fromSecret: notion_api_key
+      - key: MEMBERS_DB_ID
+        fromSecret: members_db_id
+      - key: MATCHING_HISTORY_DB_ID
+        fromSecret: matching_history_db_id
+      - key: MATCHING_RESULTS_DB_ID
+        fromSecret: matching_results_db_id
+      - key: UNMATCHED_MEMBERS_DB_ID
+        fromSecret: unmatched_members_db_id
+      - key: ACTIVITIES_DB_ID
+        fromSecret: activities_db_id
