@@ -420,12 +420,14 @@ async def add_security_headers(request: Request, call_next):
     return response
 
 # API キー認証
-def verify_api_key(x_api_key: str = Header(default=None, description="API キー（Render本番環境で必須）")):
+def verify_api_key(x_api_key: str = Header(default=None, description="API キー（オプション）")):
     """
-    API キー認証（本番環境で使用）
+    API キー認証（オプション）
 
-    API_KEY が設定されている場合のみ認証を実施します。
-    API_KEY が設定されていない場合は、認証をスキップしてクライアントが常にフォームを利用できます。
+    - API_KEY が設定されている場合のみ認証を実施
+    - API_KEY が設定されていない場合は、認証をスキップしてクライアントが常にフォームを利用できます
+
+    用途：フォーム送信（/api/register-multiactivity/v2）用
     """
     api_key = os.getenv("API_KEY", "")
     env = os.getenv("ENV", "development").lower()
@@ -447,6 +449,34 @@ def verify_api_key(x_api_key: str = Header(default=None, description="API キー
         raise HTTPException(status_code=403, detail="Invalid or missing API key")
 
     logger.info("API key verification successful")
+    return True
+
+
+def verify_api_key_strict(x_api_key: str = Header(description="API キー（ダッシュボード・マッチング実行用・必須）")):
+    """
+    API キー認証（常に必須）
+
+    - 常に API_KEY をチェックします
+    - API_KEY が設定されていない場合はサーバーエラーになります
+    - X-API-Key ヘッダーが必須です
+
+    用途：ダッシュボード（/api/stats, /api/run-matching, /api/results）用
+    """
+    api_key = os.getenv("API_KEY", "")
+
+    if not api_key:
+        logger.error("API_KEY not configured on server - cannot authenticate dashboard access")
+        raise HTTPException(status_code=500, detail="API_KEY not configured on server")
+
+    if not x_api_key:
+        logger.warning("X-API-Key header missing for dashboard access")
+        raise HTTPException(status_code=401, detail="X-API-Key header is required")
+
+    if x_api_key != api_key:
+        logger.warning(f"Invalid API key attempt for dashboard")
+        raise HTTPException(status_code=403, detail="Invalid API key")
+
+    logger.info("Dashboard API key verification successful")
     return True
 
 # マッチング実行状態の管理
@@ -658,7 +688,7 @@ async def register_multiactivity_v2(
     "/api/stats",
     response_model=StatsResponse,
     tags=["Dashboard"],
-    dependencies=[Depends(verify_api_key)],
+    dependencies=[Depends(verify_api_key_strict)],
     responses={
         200: {"model": StatsResponse, "description": "統計情報の取得に成功しました"},
         403: {"description": "無効な API キー"},
@@ -738,7 +768,7 @@ async def start_matching(
         le=30,
         description="今回のマッチング目標組数（1-30、デフォルト: 15）"
     ),
-    api_key: str = Depends(verify_api_key)
+    api_key: str = Depends(verify_api_key_strict)
 ):
     """
     AI マッチング処理を開始する
@@ -797,7 +827,7 @@ async def start_matching(
 @app.get(
     "/api/results",
     tags=["Matching"],
-    dependencies=[Depends(verify_api_key)],
+    dependencies=[Depends(verify_api_key_strict)],
     responses={
         200: {"model": GetResultsResponse, "description": "マッチング結果の取得に成功しました"},
         403: {"description": "無効な API キー"},
