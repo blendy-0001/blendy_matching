@@ -5,7 +5,7 @@ import requests
 import logging
 from datetime import datetime
 from tenacity import retry, stop_after_attempt, wait_exponential
-from config import (
+from .config import (
     NOTION_API_KEY,
     MEMBERS_DB_ID,
     ACTIVITIES_DB_ID,

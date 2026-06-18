@@ -13,13 +13,13 @@
 
 | ドキュメント | 対象者 | 用途 |
 |------------|--------|------|
-| 📊 [API_EVALUATION_REPORT.md](API_EVALUATION_REPORT.md) | **クライアント** | API 品質評価・納品判定 |
-| 🚀 [PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md) | **DevOps/インフラ** | Render.com デプロイ手順 |
-| ✅ [PRODUCTION_READINESS_FINAL_REPORT.md](PRODUCTION_READINESS_FINAL_REPORT.md) | **プロジェクトマネージャー** | 完成度総括・リスク評価 |
-| 📚 [API_ERROR_HANDLING.md](API_ERROR_HANDLING.md) | **開発者** | エラーハンドリングガイド |
+| 📊 [API_EVALUATION_REPORT.md](docs/API_EVALUATION_REPORT.md) | **クライアント** | API 品質評価・納品判定 |
+| 🚀 [PRODUCTION_DEPLOYMENT_GUIDE.md](docs/PRODUCTION_DEPLOYMENT_GUIDE.md) | **DevOps/インフラ** | Render.com デプロイ手順 |
+| ✅ [PRODUCTION_READINESS_FINAL_REPORT.md](docs/PRODUCTION_READINESS_FINAL_REPORT.md) | **プロジェクトマネージャー** | 完成度総括・リスク評価 |
+| 📚 [API_ERROR_HANDLING.md](docs/API_ERROR_HANDLING.md) | **開発者** | エラーハンドリングガイド |
 
 ### **重要**: Render.com へのデプロイ前に必ず読むドキュメント
-→ **[PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md)**
+→ **[PRODUCTION_DEPLOYMENT_GUIDE.md](docs/PRODUCTION_DEPLOYMENT_GUIDE.md)**
 
 ---
 
@@ -27,38 +27,44 @@
 
 ```
 blendy_matching/
-├── 📊 本番環境対応ドキュメント
-│   ├── 🎯 PRODUCTION_READINESS_FINAL_REPORT.md   ← 完成度総括
-│   ├── 🚀 PRODUCTION_DEPLOYMENT_GUIDE.md         ← デプロイ手順
-│   ├── 📈 API_EVALUATION_REPORT.md               ← API 品質評価
-│   ├── ❌ API_ERROR_HANDLING.md                   ← エラーハンドリング
-│   └── render.yaml                               ← Render 設定ファイル
+├── src/blendy/              ← アプリ本体（Python パッケージ）
+│   ├── main.py             ← FastAPI メイン（API / フォーム）
+│   ├── config.py           ← 設定（環境変数対応）
+│   ├── notion_client.py    ← Notion API クライアント（リトライ対応）
+│   ├── matching_engine.py  ← マッチングロジック
+│   └── cooperation_type_recommender.py  ← 協業タイプ推定
 │
-├── 🔧 開発環境関連
-│   ├── README.md                                 ← このファイル
-│   ├── quick_share.cmd                           ← クイック起動
-│   ├── deploy.bat / deploy.py                    ← デプロイスクリプト
-│   ├── main.py                                   ← FastAPI メイン
-│   ├── config.py                                 ← 設定（環境変数対応）
-│   ├── notion_client.py                          ← Notion API（リトライ対応）
-│   ├── matching_engine.py                        ← マッチングロジック
-│   ├── requirements.txt                          ← 依存パッケージ
-│   └── .env.example                              ← 環境変数テンプレート
+├── templates/              ← フロントエンド（HTML）
+│   ├── index.html          ← ダッシュボード
+│   └── register_multiactivity.html  ← 申込フォーム
 │
-├── 🎨 フロントエンド
-│   └── templates/
-│       ├── index.html                            ← ダッシュボード
-│       └── register.html                         ← 申込フォーム
+├── tests/                  ← pytest テストスイート
 │
-├── 🧪 テスト・検証
-│   ├── tests/
-│   │   ├── test_scoring.py                       ← スコアリング
-│   │   ├── test_name_normalization.py            ← 名前正規化
-│   │   ├── test_matching_history.py              ← マッチング履歴
-│   │   └── test_balanced_selection.py            ← バランス選定
-│   ├── test_endpoints.py                         ← エンドポイント検証
-│   └── backups/                                  ← マッチング結果バックアップ
+├── docs/                   ← ドキュメント一式
+│   ├── api/                ← OpenAPI spec
+│   └── sales/              ← 営業資料（pptx）
+│
+├── scripts/                ← 運用 / 開発用スクリプト（Notion セットアップ、テストデータ投入、デプロイ等）
+├── archive/                ← 旧コード・一時成果物（参照用、本番非依存）
+├── backups/                ← マッチング結果バックアップ（実行時生成）
+│
+├── render.yaml             ← Render 設定ファイル
+├── requirements.txt        ← 依存パッケージ
+├── pytest.ini              ← テスト設定（pythonpath = src）
+└── .env.example            ← 環境変数テンプレート
 ```
+
+> 📄 各ドキュメントは [docs/](docs/) を参照してください。
+
+### 🚀 ローカル起動
+
+```bash
+pip install -r requirements.txt
+uvicorn blendy.main:app --app-dir src --reload   # → http://localhost:8000
+```
+
+> 本番（Render.com）の起動コマンドは `render.yaml` に定義済み:
+> `uvicorn blendy.main:app --host 0.0.0.0 --port $PORT --app-dir src`
 
 ---
 
@@ -68,7 +74,7 @@ blendy_matching/
 
 ```bash
 # サーバー起動
-python main.py
+uvicorn blendy.main:app --app-dir src --reload
 # → http://localhost:8000
 ```
 
@@ -90,7 +96,7 @@ curl -X POST "https://blendy-matching.onrender.com/api/run-matching" \
   -H "X-API-Key: your-production-api-key"
 ```
 
-詳細は → **[API_ERROR_HANDLING.md](API_ERROR_HANDLING.md)** を参照
+詳細は → **[API_ERROR_HANDLING.md](docs/API_ERROR_HANDLING.md)** を参照
 
 ---
 
@@ -104,7 +110,7 @@ Windows なら → `quick_share.cmd` をダブルクリック
 
 その他：
 ```bash
-python deploy.py
+python scripts/deploy.py
 ```
 
 ### ステップ 2️⃣ : URL を確認

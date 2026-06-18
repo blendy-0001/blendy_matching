@@ -8,7 +8,7 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from matching_engine import (
+from blendy.matching_engine import (
     _score_pair_rules,
     _calc_client_fit,
     _calc_chain_fit,

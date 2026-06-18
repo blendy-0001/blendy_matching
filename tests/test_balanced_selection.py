@@ -8,7 +8,7 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from matching_engine import _select_balanced_pairs
+from blendy.matching_engine import _select_balanced_pairs
 
 
 class TestBalancedSelection:

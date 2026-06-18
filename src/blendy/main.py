@@ -22,14 +22,14 @@ log_level = os.getenv("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(level=log_level, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-from notion_client import (
+from .notion_client import (
     get_all_members, get_matched_pairs, get_stats, save_matching_result, save_to_history,
     save_unmatched_member, create_member, create_activity,
     save_error_log, save_matching_analysis  # Phase 1: Error logs & Analysis results
 )
 # MARKER_TEST_2026_05_27
-from matching_engine import run_matching, save_backup
-from cooperation_type_recommender import infer_cooperation_type, get_cooperation_type_description
+from .matching_engine import run_matching, save_backup
+from .cooperation_type_recommender import infer_cooperation_type, get_cooperation_type_description
 
 # Trigger reload to pick up matching_engine.py changes (2026-05-23 update - reloading now)
 
@@ -1239,6 +1239,8 @@ async def _run_matching_task(max_matches: int = 15):
 
 
 if __name__ == "__main__":
+    # 起動方法: `python -m blendy.main`（src ディレクトリ配下から）または
+    #           `uvicorn blendy.main:app --app-dir src --reload`
     import os
     port = int(os.environ.get("PORT", 8000))
-    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
+    uvicorn.run("blendy.main:app", host="0.0.0.0", port=port, reload=True)

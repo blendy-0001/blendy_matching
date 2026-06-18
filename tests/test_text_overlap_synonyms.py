@@ -6,7 +6,7 @@ import os
 # プロジェクトルートを sys.path に追加（モジュール import 用）
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from matching_engine import _text_overlap_with_synonyms, _normalize_word_with_synonyms, _normalize_with_synonyms
+from blendy.matching_engine import _text_overlap_with_synonyms, _normalize_word_with_synonyms, _normalize_with_synonyms
 
 
 class TestNormalizeWordWithSynonyms:
