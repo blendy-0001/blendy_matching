@@ -120,6 +120,10 @@ uvicorn blendy.main:app --app-dir src --reload   # → http://localhost:8000
 - **申込フォーム系**: `API_KEY` 未設定なら認証スキップ（クライアントが常時フォーム利用可）。設定時は `X-API-Key` を検証
 - **ダッシュボード / マッチング実行**: 常に `X-API-Key` 必須（未設定だとサーバーエラー）
 
+### 🔑 開発引き継ぎに必要なアクセス権限
+オーナーから受け取っておきたいアカウント / APIキー / 権限のチェックリストは
+**[docs/ONBOARDING.md](docs/ONBOARDING.md)** にまとめています（Notion / Claude / Render / GitHub 等）。
+
 ### ⚠️ 運用上の注意
 - **`render.yaml` に `CLAUDE_API_KEY` / `API_KEY` の定義がない** → これらは Render ダッシュボードで手動設定が必要。`CLAUDE_API_KEY` 未設定だと Claude のシナジー加点は無効化される（マッチング自体はルールベースで動作）
 - **free プランはファイルシステムが揮発性** → `matching_engine.save_backup()` が書き出す `backups/` は再起動・再デプロイで消失する。永続化が必要なら Notion 側へ保存するか有料プラン＋ディスクを検討
