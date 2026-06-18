@@ -68,7 +68,63 @@ uvicorn blendy.main:app --app-dir src --reload   # → http://localhost:8000
 
 ---
 
-## 🚀 API エンドポイント
+## 🏗️ インフラ / デプロイ構成
+
+```
+[ ユーザー / クライアント ]
+        │  HTTPS
+        ▼
+┌─────────────────────────────┐        ┌──────────────────────┐
+│  Render.com (Web Service)   │  API   │  Notion (実データDB)  │
+│  region: singapore / free   │ ─────▶ │  メンバー / 履歴 /     │
+│  uvicorn + FastAPI          │        │  結果 / 未マッチ 等    │
+│  blendy.main:app            │        └──────────────────────┘
+└─────────────┬───────────────┘
+              │  補助的に呼び出し（シナジー加点 0〜10）
+              ▼
+        ┌──────────────────┐
+        │ Anthropic Claude │  claude-3-5-sonnet
+        └──────────────────┘
+```
+
+| 項目 | 構成 |
+|------|------|
+| **ホスティング** | Render.com Web Service（`region: singapore` / `plan: free`） |
+| **ランタイム** | Python（`env: python`）＋ `uvicorn`（ASGI）で FastAPI を起動 |
+| **デプロイ定義** | リポジトリ直下の [`render.yaml`](render.yaml)（Infrastructure as Code） |
+| **ビルド** | `pip install -r requirements.txt` |
+| **起動** | `uvicorn blendy.main:app --host 0.0.0.0 --port $PORT --app-dir src` |
+| **データストア** | 専用DBは持たず **Notion を実DBとして利用**（複数DBをID指定でアクセス） |
+| **AI 連携** | マッチングは**ルールベースのスコアリングが主軸**。Claude はシナジー加点（0〜10点）の**補助**用途で、API 失敗時はグレースフルに無視される |
+| **本番URL** | `https://blendy-matching-wipa.onrender.com`（`ALLOWED_ORIGINS` に設定） |
+
+### デプロイの流れ
+1. `main` ブランチに push（または Render ダッシュボードで手動 Deploy）
+2. Render が `render.yaml` を読み、`pip install` → `uvicorn` 起動
+3. 環境変数・Secrets はコードに含めず **Render ダッシュボードで設定**
+
+### 環境変数 / Secrets
+`render.yaml` で定義（値は Render ダッシュボードの Environment / Secrets で設定）:
+
+| 変数 | 用途 | 設定場所 |
+|------|------|----------|
+| `ENV` | `production` で認証を強制 | render.yaml |
+| `LOG_LEVEL` | ログレベル | render.yaml |
+| `ALLOWED_ORIGINS` | CORS 許可オリジン（カンマ区切り） | render.yaml |
+| `NOTION_API_KEY` | Notion Integration Token | Secret |
+| `MEMBERS_DB_ID` ほか各 `*_DB_ID` | 各 Notion DB の ID | Secret |
+| `API_KEY` | ダッシュボード / 本番マッチング実行の認証キー | ダッシュボードで要設定 |
+| `CLAUDE_API_KEY` | Claude シナジー加点用 | ダッシュボードで要設定 |
+
+### 認証モデル
+- **申込フォーム系**: `API_KEY` 未設定なら認証スキップ（クライアントが常時フォーム利用可）。設定時は `X-API-Key` を検証
+- **ダッシュボード / マッチング実行**: 常に `X-API-Key` 必須（未設定だとサーバーエラー）
+
+### ⚠️ 運用上の注意
+- **`render.yaml` に `CLAUDE_API_KEY` / `API_KEY` の定義がない** → これらは Render ダッシュボードで手動設定が必要。`CLAUDE_API_KEY` 未設定だと Claude のシナジー加点は無効化される（マッチング自体はルールベースで動作）
+- **free プランはファイルシステムが揮発性** → `matching_engine.save_backup()` が書き出す `backups/` は再起動・再デプロイで消失する。永続化が必要なら Notion 側へ保存するか有料プラン＋ディスクを検討
+- **free プランはアイドルでスリープ** → 初回アクセス時にコールドスタートの遅延が発生する
+
 
 ### **開発環境（ローカル）**
 
