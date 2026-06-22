@@ -9,7 +9,8 @@ import logging
 from datetime import datetime
 import anthropic
 from .config import CLAUDE_API_KEY, MIN_SCORE, MAX_MATCHES_PER_RUN, COLLABORATION_TYPES, INDUSTRY_KEYWORDS, ENABLE_AFFINITY_LAYER
-from .notion_client import get_activities_for_member, clear_activities_cache
+# データアクセスは repositories 越し（Phase 0: Notion を Repository の裏に隠す）
+from .repositories import get_activities_for_member, clear_activities_cache
 
 # ロギング設定
 logger = logging.getLogger(__name__)
