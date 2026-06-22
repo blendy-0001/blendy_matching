@@ -215,6 +215,33 @@ def create_member(data: dict) -> str:
         payload["properties"]["最初のアクティビティ"] = {"rich_text": [{"text": {"content": data.get("最初のアクティビティ", "")}}]}
         logger.info(f"[DEBUG] 最初のアクティビティを追加: {data.get('最初のアクティビティ')}")
 
+    # ── レベル2/3 親和性フィールド（叩き）──
+    # data に含まれる場合のみ追加（既存呼び出しには無影響）。
+    # ※ これらを保存するには MEMBERS_DB 側に同名プロパティの追加が必要
+    #    （docs/superpowers/specs の「必要な Notion スキーマ変更」を参照）。
+    if data.get("施策活動"):
+        activities = data["施策活動"]
+        if isinstance(activities, str):
+            activities = [s.strip() for s in activities.replace("、", ",").split(",") if s.strip()]
+        payload["properties"]["施策活動"] = {
+            "multi_select": [{"name": str(a)} for a in activities if str(a).strip()]
+        }
+    if data.get("意思決定スタイル"):
+        payload["properties"]["意思決定スタイル"] = {"select": {"name": data["意思決定スタイル"]}}
+    if data.get("時間軸"):
+        payload["properties"]["時間軸"] = {"select": {"name": data["時間軸"]}}
+    if data.get("コミットレベル") is not None and data.get("コミットレベル") != "":
+        try:
+            payload["properties"]["コミットレベル"] = {"number": int(data["コミットレベル"])}
+        except (ValueError, TypeError):
+            pass
+    if data.get("協調スタイル"):
+        payload["properties"]["協調スタイル"] = {"select": {"name": data["協調スタイル"]}}
+    if data.get("協業経験"):
+        payload["properties"]["協業経験"] = {"select": {"name": data["協業経験"]}}
+    if data.get("ビジョン記述"):
+        payload["properties"]["ビジョン記述"] = {"rich_text": [{"text": {"content": str(data["ビジョン記述"])[:2000]}}]}
+
     # フィルタリング前のプロパティキー
     logger.debug(f"[DEBUG] フィルタリング前のキー: {list(payload['properties'].keys())}")
 

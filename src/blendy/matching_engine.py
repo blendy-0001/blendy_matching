@@ -8,8 +8,9 @@ import os
 import logging
 from datetime import datetime
 import anthropic
-from .config import CLAUDE_API_KEY, MIN_SCORE, MAX_MATCHES_PER_RUN, COLLABORATION_TYPES, INDUSTRY_KEYWORDS
-from .notion_client import get_activities_for_member, clear_activities_cache
+from .config import CLAUDE_API_KEY, MIN_SCORE, MAX_MATCHES_PER_RUN, COLLABORATION_TYPES, INDUSTRY_KEYWORDS, ENABLE_AFFINITY_LAYER
+# データアクセスは repositories 越し（Phase 0: Notion を Repository の裏に隠す）
+from .repositories import get_activities_for_member, clear_activities_cache
 
 # ロギング設定
 logger = logging.getLogger(__name__)
@@ -222,11 +223,11 @@ def _score_pair_rules(a: dict, b: dict) -> dict | None:
             "対象市場一致度": _calc_target_market_fit(a, b),  # Phase 1追加
         }
 
-        total_score = min(sum(scores.values()), 100)  # スコアを100以下にキャップ
+        total_score = min(sum(scores.values()), 100)  # スコアを100以下にキャップ（L1）
         collab_type = _determine_collab_type(a, b, scores)
         reason = _generate_reason(a, b, scores)
 
-        return {
+        result = {
             "メンバーA名": a["名前"],
             "メンバーB名": b["名前"],
             "メンバーA": a,
@@ -236,6 +237,24 @@ def _score_pair_rules(a: dict, b: dict) -> dict | None:
             "協業タイプ": collab_type,
             "マッチング理由": reason,
         }
+
+        # ── L2/L3 親和性 加算層（フラグ制御・既定OFF）──
+        # OFF の場合はここを通らず、既存挙動と完全一致する。
+        if ENABLE_AFFINITY_LAYER:
+            try:
+                from .affinity_scoring import compute_affinity_from_members
+                breakdown = compute_affinity_from_members(a, b)
+                result["スコア"] = total_score + breakdown.total
+                result["L1スコア"] = total_score
+                result["親和性スコア"] = breakdown.total
+                result["スコア内訳"] = breakdown.model_dump()
+                if breakdown.reasons:
+                    result["マッチング理由"] = reason + " / " + " ; ".join(breakdown.reasons)
+            except Exception as e:
+                # 加算層の失敗で既存マッチングを止めない（叩きとして堅牢に）
+                logger.warning(f"    親和性スコア算出をスキップ ({a['名前']} × {b['名前']}): {e}")
+
+        return result
     except Exception as e:
         logger.error(f"    スコアリングエラー ({a['名前']} × {b['名前']}): {e}")
         return None
