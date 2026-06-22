@@ -2,7 +2,7 @@
 
 **v1.0 | 2026-06-22 | Blendy 協業マッチングシステム**
 
-関連: [方向性ドキュメント](../../../ブレンディ　協業マッチング　方向性.md) / 前提PR: `refactor/directory-structure`（`src/blendy` パッケージ化）がマージ済み
+関連: [方向性ドキュメント](../../ブレンディ　協業マッチング　方向性.md) / 前提PR: `refactor/directory-structure`（`src/blendy` パッケージ化）がマージ済み
 
 ---
 
