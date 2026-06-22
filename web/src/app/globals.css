@@ -1,0 +1,107 @@
+/*
+ * グローバルスタイル + カラートークン（CSS変数）
+ * 値は src/theme/colors.ts と対。色を変える時はここ（と colors.ts）を編集。
+ */
+:root {
+  /* semantic tokens（役割名で参照する） */
+  --bg: #0a0a0b;
+  --surface: #161619;
+  --surface-raised: #1e1e22;
+  --border: #26262b;
+  --text: #f5f5f7;
+  --text-muted: #9a9aa6;
+  --text-faint: #6b6b76;
+  --accent: #6e56cf;
+  --accent-hover: #7c66d9;
+  --on-accent: #f5f5f7;
+  --success: #3fb37f;
+  --danger: #e5484d;
+  --like: #3fb37f;
+  --pass: #e5484d;
+
+  /* spacing / radius / typography */
+  --radius-sm: 8px;
+  --radius: 14px;
+  --radius-lg: 22px;
+  --space: 8px;
+  --font: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN",
+    "Segoe UI", Roboto, sans-serif;
+  --maxw: 460px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0 0 8px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+.faint {
+  color: var(--text-faint);
+}
+
+/* レイアウト */
+.app-shell {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  min-height: 100dvh;
+  padding: 20px 18px calc(72px + env(safe-area-inset-bottom));
+}
+
+.center-screen {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+/* ボトムナビ */
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-around;
+  padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+}
+.bottom-nav a {
+  color: var(--text-faint);
+  font-size: 0.72rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.bottom-nav a.active {
+  color: var(--text);
+}
