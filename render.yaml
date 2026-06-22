@@ -5,7 +5,7 @@ services:
     region: singapore
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    startCommand: uvicorn blendy.main:app --host 0.0.0.0 --port $PORT --app-dir src
 
     # 環境変数は Render.com ダッシュボードで設定してください
     # https://dashboard.render.com/select-repo → Environment

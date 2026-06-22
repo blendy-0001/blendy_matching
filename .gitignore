@@ -45,3 +45,5 @@ server_new.log
 venv/
 env/
 ENV/
+.venv/
+.venv_verify/

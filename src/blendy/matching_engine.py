@@ -8,8 +8,8 @@ import os
 import logging
 from datetime import datetime
 import anthropic
-from config import CLAUDE_API_KEY, MIN_SCORE, MAX_MATCHES_PER_RUN, COLLABORATION_TYPES, INDUSTRY_KEYWORDS
-from notion_client import get_activities_for_member, clear_activities_cache
+from .config import CLAUDE_API_KEY, MIN_SCORE, MAX_MATCHES_PER_RUN, COLLABORATION_TYPES, INDUSTRY_KEYWORDS
+from .notion_client import get_activities_for_member, clear_activities_cache
 
 # ロギング設定
 logger = logging.getLogger(__name__)
@@ -784,13 +784,13 @@ def save_backup(matches: list[dict], session_name: str = "", debug_log: list = N
     if debug_log is None:
         debug_log = []
 
-    # backups ディレクトリを確保（スクリプトと同じディレクトリに作成）
-    # プロジェクトルートディレクトリを取得
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    backup_dir = os.path.join(script_dir, "backups")
+    # backups ディレクトリを確保（プロジェクトルート直下に作成）
+    # このモジュールは src/blendy/ 配下にあるため、2階層上がプロジェクトルート
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    backup_dir = os.path.join(project_root, "backups")
 
     # デバッグ: どこに保存しようとしているかログ出力
-    logger.debug(f"[BACKUP DEBUG] Script dir: {script_dir}")
+    logger.debug(f"[BACKUP DEBUG] Project root: {project_root}")
     logger.debug(f"[BACKUP DEBUG] Backup dir: {backup_dir}")
     if not os.path.exists(backup_dir):
         os.makedirs(backup_dir)
