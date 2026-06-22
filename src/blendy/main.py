@@ -30,6 +30,9 @@ from .notion_client import (
 # MARKER_TEST_2026_05_27
 from .matching_engine import run_matching, save_backup
 from .cooperation_type_recommender import infer_cooperation_type, get_cooperation_type_description
+from .profile_schema import (
+    DecisionStyle, TimeHorizon, CollaborationStyle, PastCollaboration,
+)
 
 # Trigger reload to pick up matching_engine.py changes (2026-05-23 update - reloading now)
 
@@ -517,6 +520,84 @@ async def register_multiactivity_form():
     """マルチアクティビティ対応メンバー申込フォーム"""
     with open("templates/register_multiactivity.html", encoding="utf-8") as f:
         return f.read()
+
+
+@app.get("/register-v3", response_class=HTMLResponse)
+async def register_v3_form():
+    """レベル2/3（施策・性格・価値観）対応 申込フォーム（叩き）"""
+    with open("templates/register_v3.html", encoding="utf-8") as f:
+        return f.read()
+
+
+# ── レベル2/3 親和性プロファイル（叩き）のリクエストモデル ──
+class AffinityProfileInput(BaseModel):
+    """L2/L3 の構造化質問の入力。すべて任意（段階的取得のため）。"""
+    施策活動: List[str] = Field(default_factory=list, description="L2: 施策・種まき活動")
+    意思決定スタイル: Optional[DecisionStyle] = Field(default=None, description="L3")
+    時間軸: Optional[TimeHorizon] = Field(default=None, description="L3")
+    コミットレベル: Optional[int] = Field(default=None, ge=1, le=5, description="L3: Likert 1-5")
+    協調スタイル: Optional[CollaborationStyle] = Field(default=None, description="L3")
+    協業経験: Optional[PastCollaboration] = Field(default=None, description="L3")
+    ビジョン記述: str = Field(default="", description="L3: 自由記述（Phase1では保存のみ・非採点）")
+
+
+class RegisterV3Request(BaseModel):
+    """L1 基本情報 + L2/L3 親和性プロファイルを一括登録（叩き）。"""
+    基本情報: MemberBasicInfo
+    親和性プロファイル: AffinityProfileInput = Field(default_factory=AffinityProfileInput)
+
+
+@app.post(
+    "/api/register-v3",
+    response_model=RegisterMemberResponse,
+    tags=["Member Management"],
+    responses={
+        200: {"model": RegisterMemberResponse, "description": "メンバー登録（L2/L3対応）が成功しました"},
+        422: {"model": ValidationErrorResponse, "description": "入力バリデーションエラー"},
+        500: {"model": InternalErrorResponse, "description": "メンバー登録処理中にエラーが発生しました"},
+    },
+)
+async def register_v3(request_body: RegisterV3Request):
+    """新規メンバーを登録する（レベル2/3 親和性プロファイル対応・叩き）
+
+    方向性ドキュメントの 3 階層のうち、レベル2（施策・種まき活動）と
+    レベル3（性格・価値観・意思決定スタイル）を構造化質問で取得し Notion に保存する。
+
+    **Notes:**
+    - L2/L3 を保存するには MEMBERS_DB 側に対応プロパティの追加が必要です
+      （`docs/superpowers/specs/2026-06-22-l2-l3-affinity-scoring-design.md` 参照）。
+    - マッチング時の親和性加算は `ENABLE_AFFINITY_LAYER=true` で有効化されます。
+    """
+    基本情報 = request_body.基本情報
+    profile = request_body.親和性プロファイル
+    logger.debug(f"register_v3 called with member: {基本情報.名前}")
+    try:
+        data = {
+            "名前": 基本情報.名前,
+            "会社名": 基本情報.会社名,
+            "業種カテゴリ": 基本情報.業種カテゴリ,
+            "業種詳細": 基本情報.業種詳細,
+            "事業フェーズ": 基本情報.事業フェーズ,
+            "LINE ID": 基本情報.LINE_ID,
+            "Facebook URL": 基本情報.Facebook_URL,
+            # ── L2/L3（提供時のみ create_member 側で保存）──
+            "施策活動": profile.施策活動,
+            "意思決定スタイル": profile.意思決定スタイル.value if profile.意思決定スタイル else None,
+            "時間軸": profile.時間軸.value if profile.時間軸 else None,
+            "コミットレベル": profile.コミットレベル,
+            "協調スタイル": profile.協調スタイル.value if profile.協調スタイル else None,
+            "協業経験": profile.協業経験.value if profile.協業経験 else None,
+            "ビジョン記述": profile.ビジョン記述,
+        }
+        member_id = create_member(data)
+        logger.info(f"メンバー登録成功(v3): {基本情報.名前} (ID: {member_id})")
+        return RegisterMemberResponse(success=True, page_id=member_id)
+    except Exception as e:
+        logger.error(f"register_v3 エラー: {e}\n{traceback.format_exc()}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": str(e), "error_code": "REGISTRATION_ERROR"},
+        )
 
 
 @app.post(

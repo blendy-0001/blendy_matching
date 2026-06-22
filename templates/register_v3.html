@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blendy 協業マッチング 申込（v3・施策/価値観対応）</title>
+  <style>
+    :root { --accent:#4f46e5; --bg:#f6f7fb; --line:#e4e7ee; --muted:#6b7280; }
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Segoe UI", sans-serif;
+           background: var(--bg); color:#1f2430; margin:0; padding:24px; }
+    .wrap { max-width: 720px; margin: 0 auto; }
+    h1 { font-size: 1.4rem; margin: 0 0 4px; }
+    .sub { color: var(--muted); font-size:.9rem; margin-bottom: 20px; }
+    .card { background:#fff; border:1px solid var(--line); border-radius:14px; padding:20px 22px; margin-bottom:18px; }
+    .card h2 { font-size:1.05rem; margin:0 0 4px; }
+    .lv { display:inline-block; font-size:.72rem; font-weight:700; color:#fff; background:var(--accent);
+          border-radius:999px; padding:2px 9px; margin-left:6px; vertical-align:middle; }
+    .lv.l2 { background:#0ea5e9; } .lv.l3 { background:#db2777; }
+    .hint { color: var(--muted); font-size:.82rem; margin:2px 0 14px; }
+    label { display:block; font-size:.86rem; font-weight:600; margin:12px 0 6px; }
+    input[type=text], input[type=url], select, textarea {
+      width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:9px; font-size:.95rem; background:#fff; }
+    textarea { min-height:84px; resize:vertical; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .checks { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px; }
+    .checks label { display:flex; align-items:center; gap:8px; font-weight:400; margin:0;
+                    border:1px solid var(--line); border-radius:9px; padding:9px 11px; cursor:pointer; }
+    .checks input { width:auto; }
+    .likert { display:flex; gap:6px; }
+    .likert label { flex:1; text-align:center; border:1px solid var(--line); border-radius:9px; padding:8px 0; margin:0; cursor:pointer; }
+    .likert input { display:none; }
+    .likert input:checked + span { color: var(--accent); font-weight:700; }
+    button { width:100%; background:var(--accent); color:#fff; border:0; border-radius:10px;
+             padding:14px; font-size:1rem; font-weight:700; cursor:pointer; margin-top:6px; }
+    button:disabled { opacity:.5; cursor:default; }
+    .note { font-size:.8rem; color:var(--muted); margin-top:10px; }
+    #msg { margin-top:14px; padding:12px 14px; border-radius:9px; display:none; }
+    #msg.ok { background:#ecfdf5; color:#065f46; display:block; }
+    #msg.ng { background:#fef2f2; color:#991b1b; display:block; }
+    .req { color:#db2777; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>協業マッチング 申込フォーム</h1>
+    <div class="sub">業務内容の補完性に加え、<b>施策スタイル</b>と<b>価値観・意思決定スタイル</b>まで見て、本当に協業できるペアをご紹介します（所要 2〜3分）。</div>
+
+    <form id="form">
+      <!-- L1 基本情報 -->
+      <div class="card">
+        <h2>基本情報<span class="lv">L1</span></h2>
+        <div class="hint">会社・事業の基本です。</div>
+        <label>お名前 / 代表者名 <span class="req">*</span></label>
+        <input type="text" name="名前" required />
+        <div class="grid">
+          <div><label>会社名</label><input type="text" name="会社名" /></div>
+          <div><label>業種カテゴリ</label><input type="text" name="業種カテゴリ" placeholder="IT / 金融 / 製造 …" /></div>
+        </div>
+        <div class="grid">
+          <div><label>業種詳細</label><input type="text" name="業種詳細" placeholder="SaaS / クラウド …" /></div>
+          <div><label>事業フェーズ</label><input type="text" name="事業フェーズ" placeholder="シード / 成長期 …" /></div>
+        </div>
+        <label>Facebook URL <span class="req">*</span></label>
+        <input type="url" name="Facebook_URL" required placeholder="https://facebook.com/..." />
+        <label>LINE ID</label>
+        <input type="text" name="LINE_ID" />
+      </div>
+
+      <!-- L2 施策・種まき活動 -->
+      <div class="card">
+        <h2>施策・種まき活動<span class="lv l2">L2</span></h2>
+        <div class="hint">日頃どんな「種まき」をしていますか？（似た活動スタイルのペアは噛み合いやすい）当てはまるものを選択。</div>
+        <div class="checks" id="activities">
+          <label><input type="checkbox" value="交流会・ミートアップ参加" />交流会・ミートアップ参加</label>
+          <label><input type="checkbox" value="学生・大学コミュニティ活動" />学生・大学コミュニティ活動</label>
+          <label><input type="checkbox" value="副事業・副次サービスへの投資" />副事業・副次サービスへの投資</label>
+          <label><input type="checkbox" value="勉強会・セミナー登壇" />勉強会・セミナー登壇</label>
+          <label><input type="checkbox" value="SNS・オンライン発信" />SNS・オンライン発信</label>
+          <label><input type="checkbox" value="紹介・リファラル活動" />紹介・リファラル活動</label>
+        </div>
+      </div>
+
+      <!-- L3 性格・価値観・意思決定スタイル -->
+      <div class="card">
+        <h2>性格・価値観・意思決定スタイル<span class="lv l3">L3</span></h2>
+        <div class="hint">協業の成否を最も左右する部分です。直感でお選びください。</div>
+
+        <label>意思決定スタイル</label>
+        <select name="意思決定スタイル">
+          <option value="">選択してください</option>
+          <option>即決派</option><option>バランス型</option><option>慎重派</option>
+        </select>
+
+        <label>時間軸（重視する視点）</label>
+        <select name="時間軸">
+          <option value="">選択してください</option>
+          <option>長期</option><option>中期</option><option>短期</option>
+        </select>
+
+        <label>協調スタイル</label>
+        <select name="協調スタイル">
+          <option value="">選択してください</option>
+          <option>個人主義</option><option>バランス</option><option>協調志向</option>
+        </select>
+
+        <label>協業への本気度（コミットレベル）</label>
+        <div class="likert" id="commit">
+          <label><input type="radio" name="コミットレベル" value="1" /><span>1</span></label>
+          <label><input type="radio" name="コミットレベル" value="2" /><span>2</span></label>
+          <label><input type="radio" name="コミットレベル" value="3" /><span>3</span></label>
+          <label><input type="radio" name="コミットレベル" value="4" /><span>4</span></label>
+          <label><input type="radio" name="コミットレベル" value="5" /><span>5</span></label>
+        </div>
+
+        <label>過去の協業経験</label>
+        <select name="協業経験">
+          <option value="">選択してください</option>
+          <option>なし</option><option>1-2回</option><option>3回以上</option>
+        </select>
+
+        <label>ビジョン・こだわり（自由記述）</label>
+        <textarea name="ビジョン記述" placeholder="どんな世界を目指していますか？協業で大事にしたいことは？"></textarea>
+        <div class="note">※ 自由記述は現在保存のみ。今後 AI による価値観分析（Phase 2）に活用予定です。</div>
+      </div>
+
+      <button type="submit" id="submit">この内容で申し込む</button>
+      <div id="msg"></div>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('form');
+    const msg = document.getElementById('msg');
+    const submit = document.getElementById('submit');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.className = ''; msg.textContent = '';
+      submit.disabled = true; submit.textContent = '送信中…';
+
+      const fd = new FormData(form);
+      const activities = Array.from(document.querySelectorAll('#activities input:checked')).map(c => c.value);
+      const commit = fd.get('コミットレベル');
+
+      const payload = {
+        基本情報: {
+          名前: fd.get('名前') || '',
+          会社名: fd.get('会社名') || '',
+          業種カテゴリ: fd.get('業種カテゴリ') || '',
+          業種詳細: fd.get('業種詳細') || '',
+          事業フェーズ: fd.get('事業フェーズ') || '',
+          LINE_ID: fd.get('LINE_ID') || '',
+          Facebook_URL: fd.get('Facebook_URL') || '',
+        },
+        親和性プロファイル: {
+          施策活動: activities,
+          意思決定スタイル: fd.get('意思決定スタイル') || null,
+          時間軸: fd.get('時間軸') || null,
+          コミットレベル: commit ? parseInt(commit, 10) : null,
+          協調スタイル: fd.get('協調スタイル') || null,
+          協業経験: fd.get('協業経験') || null,
+          ビジョン記述: fd.get('ビジョン記述') || '',
+        },
+      };
+
+      try {
+        const res = await fetch('/api/register-v3', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          msg.className = 'ok';
+          msg.textContent = '✅ 申し込みを受け付けました。マッチングが成立しましたらご連絡します。';
+          form.reset();
+        } else {
+          msg.className = 'ng';
+          msg.textContent = '⚠️ 送信に失敗しました: ' + (data.error || res.status);
+        }
+      } catch (err) {
+        msg.className = 'ng';
+        msg.textContent = '⚠️ 通信エラー: ' + err.message;
+      } finally {
+        submit.disabled = false; submit.textContent = 'この内容で申し込む';
+      }
+    });
+  </script>
+</body>
+</html>

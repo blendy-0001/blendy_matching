@@ -48,6 +48,11 @@ SUCCESS_STORIES_DATA_SOURCE_ID     = os.getenv("SUCCESS_STORIES_DATA_SOURCE_ID",
 MIN_SCORE = 45           # 高品質マッチングのみ（ルール版用）
 MAX_MATCHES_PER_RUN = 30  # 1回の実行で生成する最大ペア数（ユーザーが残り3件を手動調整）
 
+# ── レベル2/3 親和性スコアリング（叩き） ──────────────
+# True にすると L1 ルールスコアに L2/L3 の加算層を上乗せする。
+# 既定 False。OFF の場合は既存挙動と完全一致（本番無影響）。
+ENABLE_AFFINITY_LAYER = os.getenv("ENABLE_AFFINITY_LAYER", "false").lower() == "true"
+
 # ── スコアリング配点 ─────────────────────────────
 SCORE_WEIGHTS = {
     "エンドクライアント一致度":    30,  # 同じクライアント層か
