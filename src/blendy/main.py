@@ -22,10 +22,11 @@ log_level = os.getenv("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(level=log_level, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-from .notion_client import (
+# データアクセスは repositories 越し（Phase 0: Notion を Repository の裏に隠す）
+from .repositories import (
     get_all_members, get_matched_pairs, get_stats, save_matching_result, save_to_history,
     save_unmatched_member, create_member, create_activity,
-    save_error_log, save_matching_analysis  # Phase 1: Error logs & Analysis results
+    save_error_log, save_matching_analysis  # Error logs & Analysis results
 )
 # MARKER_TEST_2026_05_27
 from .matching_engine import run_matching, save_backup
