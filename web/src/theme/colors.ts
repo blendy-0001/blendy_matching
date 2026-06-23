@@ -23,14 +23,15 @@ export const primitive = {
   gray300: "#9a9aa6",
   gray200: "#c7c7d1",
   white: "#f5f5f7",
-  // アクセント（ここを変えるとブランドカラーが変わる）
-  accent: "#6e56cf",
-  accentHover: "#7c66d9",
+  // アクセント（コーポレートブルー。ここを変えるとブランドカラーが変わる）
+  accent: "#3d7eea",
+  accentHover: "#5590f0",
   // ステータス
   success: "#3fb37f",
   danger: "#e5484d",
-  like: "#3fb37f",
-  pass: "#e5484d",
+  // 企業間の意思表示（恋愛アプリ的な赤/緑ハートは避け、青=関心・グレー=見送り）
+  interested: "#3d7eea",
+  skip: "#6b6b76",
 } as const;
 
 // ── semantic（役割） ──────────────────────────────
@@ -47,8 +48,8 @@ export const semantic = {
   onAccent: primitive.white,
   success: primitive.success,
   danger: primitive.danger,
-  like: primitive.like,
-  pass: primitive.pass,
+  interested: primitive.interested,
+  skip: primitive.skip,
 } as const;
 
 export type SemanticColor = keyof typeof semantic;

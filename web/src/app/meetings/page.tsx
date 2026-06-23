@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BottomNav } from "@/components/BottomNav";
+import { AppFrame } from "@/components/AppFrame";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Field, Textarea } from "@/components/ui/Field";
@@ -48,7 +48,8 @@ export default function MeetingsPage() {
   }
 
   return (
-    <div className="app-shell">
+    <AppFrame>
+      <div className="content-narrow">
       <h1 style={{ fontSize: "1.35rem" }}>商談議事録から更新</h1>
       <p className="muted" style={{ fontSize: "0.86rem", marginBottom: 10 }}>
         議事録を貼り付けると、AIが企業情報・営業情報の<strong>更新案</strong>を提案します。
@@ -117,9 +118,8 @@ export default function MeetingsPage() {
           )}
         </div>
       )}
-
-      <BottomNav />
-    </div>
+      </div>
+    </AppFrame>
   );
 }
 

@@ -32,7 +32,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="app-shell">
+    <div className="app-shell content-narrow">
       <h1 style={{ fontSize: "1.5rem", marginTop: 24 }}>ログイン</h1>
       <form onSubmit={onSubmit}>
         <Field label="メールアドレス" required>

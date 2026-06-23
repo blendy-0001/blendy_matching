@@ -39,10 +39,10 @@ export function SwipeCard({ candidate, onResolved, isTop }: Props) {
     setTimeout(() => onResolved(dir), 180);
   }
 
-  const rot = dx / 18;
+  const rot = dx / 24;
   const translateX = leaving === "like" ? 600 : leaving === "pass" ? -600 : dx;
-  const likeOpacity = Math.min(Math.max(dx / THRESHOLD, 0), 1);
-  const passOpacity = Math.min(Math.max(-dx / THRESHOLD, 0), 1);
+  const interestedOpacity = Math.min(Math.max(dx / THRESHOLD, 0), 1);
+  const skipOpacity = Math.min(Math.max(-dx / THRESHOLD, 0), 1);
 
   return (
     <div
@@ -55,8 +55,8 @@ export function SwipeCard({ candidate, onResolved, isTop }: Props) {
         background: "var(--surface)",
         border: "1px solid var(--border)",
         borderRadius: "var(--radius-lg)",
-        padding: 20,
-        boxShadow: "0 12px 40px rgba(0,0,0,0.45)",
+        padding: 22,
+        boxShadow: "0 10px 30px rgba(0,0,0,0.4)",
         transform: `translateX(${translateX}px) rotate(${rot}deg)`,
         transition: leaving || start.current == null ? "transform .18s ease" : "none",
         touchAction: "none",
@@ -66,39 +66,72 @@ export function SwipeCard({ candidate, onResolved, isTop }: Props) {
         flexDirection: "column",
       }}
     >
-      {/* スコアバッジ */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      {/* ヘッダ: 会社名 + 相性スコア */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+        <div style={{ minWidth: 0 }}>
+          <h2 style={{ fontSize: "1.35rem", margin: 0 }}>{company.name}</h2>
+          <div className="faint" style={{ fontSize: "0.8rem", marginTop: 3 }}>
+            {company.industry}
+          </div>
+        </div>
         <span
           style={{
+            flexShrink: 0,
             fontSize: "0.72rem",
             color: "var(--accent)",
             border: "1px solid var(--accent)",
-            borderRadius: 999,
-            padding: "3px 10px",
+            borderRadius: 6,
+            padding: "4px 10px",
           }}
         >
-          相性スコア {score}
-        </span>
-        <span className="faint" style={{ fontSize: "0.78rem" }}>
-          {company.industry}・{company.employeeCount}名
+          相性 {score}
         </span>
       </div>
 
-      <h2 style={{ fontSize: "1.5rem", marginTop: 14 }}>{company.name}</h2>
-      <p className="muted" style={{ fontSize: "0.92rem", lineHeight: 1.65 }}>
+      {/* 会社の基礎情報（B2B向けに前面化） */}
+      <div
+        style={{
+          display: "flex",
+          gap: 8,
+          marginTop: 12,
+          flexWrap: "wrap",
+        }}
+      >
+        {company.employeeCount != null && <Chip>従業員 {company.employeeCount}名</Chip>}
+        {company.revenueScale && <Chip>売上 {company.revenueScale}</Chip>}
+      </div>
+
+      <p className="muted" style={{ fontSize: "0.9rem", lineHeight: 1.65, marginTop: 12 }}>
         {profile.summary}
       </p>
 
-      <div style={{ marginTop: "auto", display: "grid", gap: 10 }}>
+      <div style={{ marginTop: "auto", display: "grid", gap: 11, paddingTop: 12 }}>
         <Mini label="提供価値" value={profile.valueProp} />
         <Mini label="強み" value={profile.strengths} />
         <Mini label="課題・求めるもの" value={profile.challenges} />
       </div>
 
-      {/* LIKE / PASS のラベル */}
-      <Badge text="LIKE" color="var(--like)" opacity={likeOpacity} side="left" />
-      <Badge text="PASS" color="var(--pass)" opacity={passOpacity} side="right" />
+      {/* 興味あり / 見送る のラベル */}
+      <Badge text="興味あり" color="var(--interested)" opacity={interestedOpacity} side="left" />
+      <Badge text="見送る" color="var(--skip)" opacity={skipOpacity} side="right" />
     </div>
+  );
+}
+
+function Chip({ children }: { children: React.ReactNode }) {
+  return (
+    <span
+      style={{
+        fontSize: "0.74rem",
+        color: "var(--text-muted)",
+        background: "var(--surface-raised)",
+        border: "1px solid var(--border)",
+        borderRadius: 6,
+        padding: "4px 9px",
+      }}
+    >
+      {children}
+    </span>
   );
 }
 
@@ -133,10 +166,10 @@ function Badge({
         color,
         border: `3px solid ${color}`,
         borderRadius: 8,
-        padding: "4px 10px",
+        padding: "5px 12px",
         fontWeight: 800,
-        fontSize: "1.1rem",
-        transform: `rotate(${side === "left" ? -14 : 14}deg)`,
+        fontSize: "1rem",
+        transform: `rotate(${side === "left" ? -6 : 6}deg)`,
         opacity,
         pointerEvents: "none",
       }}

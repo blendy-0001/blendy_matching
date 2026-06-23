@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { BottomNav } from "@/components/BottomNav";
+import { AppFrame } from "@/components/AppFrame";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Field, TextInput, Textarea } from "@/components/ui/Field";
@@ -32,7 +32,8 @@ export default function GenerateProfilePage() {
   }
 
   return (
-    <div className="app-shell">
+    <AppFrame>
+      <div className="content-narrow">
       <h1 style={{ fontSize: "1.35rem" }}>AIで会社プロフィール作成</h1>
       <p className="muted" style={{ fontSize: "0.86rem", marginBottom: 12 }}>
         HPと会社紹介資料を読み込んで「叩き台」を生成します。あとから編集できます。
@@ -83,8 +84,7 @@ export default function GenerateProfilePage() {
           </Link>
         </Card>
       )}
-
-      <BottomNav />
-    </div>
+      </div>
+    </AppFrame>
   );
 }

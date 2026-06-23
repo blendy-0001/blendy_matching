@@ -16,13 +16,14 @@ export default function Landing() {
           Blendy
         </div>
         <p className="muted" style={{ fontSize: "1.02rem", lineHeight: 1.7, marginBottom: 28 }}>
-          本当に組める協業パートナーと出会う。
+          本当に組める協業パートナーを見つける。
           <br />
-          業務の補完性だけでなく、施策スタイルと価値観まで見て。
+          業務の補完性に加え、施策スタイルと価値観の相性まで見て、
+          確度の高い企業をご提案します。
         </p>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <Link href="/signup">
-            <Button full>はじめる</Button>
+            <Button full>無料で会社を登録する</Button>
           </Link>
           <Link href="/login">
             <Button full variant="ghost">
@@ -31,7 +32,7 @@ export default function Landing() {
           </Link>
           <Link href="/discover" style={{ marginTop: 6 }}>
             <span className="faint" style={{ fontSize: "0.85rem" }}>
-              デモを見る（スワイプ画面）→
+              デモを見る（企業をさがす画面）→
             </span>
           </Link>
         </div>

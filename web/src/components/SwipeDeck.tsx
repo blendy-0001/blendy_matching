@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { DeckCandidate, SwipeDirection } from "@/lib/types";
 import { SwipeCard } from "./SwipeCard";
+import { IconCheck, IconClose } from "./Icons";
 
 export function SwipeDeck({ initial }: { initial: DeckCandidate[] }) {
   const [index, setIndex] = useState(0);
@@ -19,12 +20,11 @@ export function SwipeDeck({ initial }: { initial: DeckCandidate[] }) {
   if (!current) {
     return (
       <div style={{ textAlign: "center", padding: "60px 12px" }}>
-        <div style={{ fontSize: "2rem", marginBottom: 8 }}>🎉</div>
-        <h2>今日の候補は以上です</h2>
+        <h2>本日の候補は以上です</h2>
         <p className="muted" style={{ fontSize: "0.9rem" }}>
           {liked.length > 0
-            ? `${liked.length}社にLikeしました。相互Likeでマッチが成立します。`
-            : "また新しい候補が入ったらお知らせします。"}
+            ? `${liked.length}社に「興味あり」を送りました。相手も興味を示すと、つながり（商談可能）になります。`
+            : "新しい候補が入り次第お知らせします。"}
         </p>
       </div>
     );
@@ -56,48 +56,55 @@ export function SwipeDeck({ initial }: { initial: DeckCandidate[] }) {
       </div>
 
       {/* アクションボタン */}
-      <div style={{ display: "flex", justifyContent: "center", gap: 22, marginTop: 22 }}>
-        <RoundBtn label="パス" color="var(--pass)" onClick={() => resolve("pass")}>
-          ✕
-        </RoundBtn>
-        <RoundBtn label="いいね" color="var(--like)" onClick={() => resolve("like")}>
-          ♥
-        </RoundBtn>
+      <div style={{ display: "flex", justifyContent: "center", gap: 14, marginTop: 22 }}>
+        <ActionBtn label="見送る" color="var(--skip)" onClick={() => resolve("pass")} Icon={IconClose} />
+        <ActionBtn
+          label="興味あり"
+          color="var(--interested)"
+          onClick={() => resolve("like")}
+          Icon={IconCheck}
+          primary
+        />
       </div>
     </div>
   );
 }
 
-function RoundBtn({
-  children,
-  color,
+function ActionBtn({
   label,
+  color,
   onClick,
+  Icon,
+  primary,
 }: {
-  children: React.ReactNode;
-  color: string;
   label: string;
+  color: string;
   onClick: () => void;
+  Icon: (p: { className?: string }) => React.ReactElement;
+  primary?: boolean;
 }) {
   return (
     <button
       onClick={onClick}
-      aria-label={label}
       style={{
-        width: 64,
-        height: 64,
-        borderRadius: "50%",
-        background: "var(--surface-raised)",
-        border: `2px solid ${color}`,
-        color,
-        fontSize: "1.5rem",
+        flex: 1,
+        maxWidth: 200,
+        height: 50,
+        borderRadius: "var(--radius)",
+        background: primary ? color : "var(--surface-raised)",
+        border: `1px solid ${primary ? color : "var(--border)"}`,
+        color: primary ? "var(--on-accent)" : "var(--text)",
+        fontSize: "0.95rem",
+        fontWeight: 700,
         cursor: "pointer",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        gap: 8,
       }}
     >
-      {children}
+      <Icon className="nav-icon" />
+      {label}
     </button>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { BottomNav } from "@/components/BottomNav";
+import { AppFrame } from "@/components/AppFrame";
 import { Button } from "@/components/ui/Button";
 import { Field, TextInput, Textarea } from "@/components/ui/Field";
 
@@ -25,7 +25,8 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="app-shell">
+    <AppFrame>
+      <div className="content-narrow">
       <h1 style={{ fontSize: "1.35rem" }}>会社プロフィール</h1>
       <p className="muted" style={{ fontSize: "0.86rem", marginBottom: 6 }}>
         AIが下書きした内容です。自由に編集して整えてください。
@@ -68,8 +69,7 @@ export default function ProfilePage() {
           </Button>
         </Link>
       </div>
-
-      <BottomNav />
-    </div>
+      </div>
+    </AppFrame>
   );
 }

@@ -64,7 +64,7 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="app-shell">
+    <div className="app-shell content-narrow">
       <h1 style={{ fontSize: "1.5rem" }}>アカウント作成</h1>
       <p className="muted" style={{ fontSize: "0.9rem", marginBottom: 8 }}>
         まずは最低限の情報だけ。会社プロフィールは後でAIが下書きします。

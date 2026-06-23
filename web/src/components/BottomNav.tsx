@@ -2,25 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-const items = [
-  { href: "/discover", label: "さがす", icon: "🔥" },
-  { href: "/matches", label: "マッチ", icon: "💬" },
-  { href: "/profile", label: "プロフィール", icon: "🏢" },
-];
+import { NAV_ITEMS } from "./nav";
 
 export function BottomNav() {
   const path = usePathname();
   return (
     <nav className="bottom-nav">
-      {items.map((it) => (
-        <Link
-          key={it.href}
-          href={it.href}
-          className={path.startsWith(it.href) ? "active" : ""}
-        >
-          <span style={{ fontSize: "1.2rem" }}>{it.icon}</span>
-          {it.label}
+      {NAV_ITEMS.map(({ href, short, Icon }) => (
+        <Link key={href} href={href} className={path.startsWith(href) ? "active" : ""}>
+          <Icon />
+          {short}
         </Link>
       ))}
     </nav>
