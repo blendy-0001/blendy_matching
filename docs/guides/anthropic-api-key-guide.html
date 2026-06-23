@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<title>Anthropic（Claude）APIキー取得手順</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+    color: #1c1c22; line-height: 1.75; font-size: 10.5pt; margin: 0;
+  }
+  .cover { border-bottom: 3px solid #3d7eea; padding-bottom: 14px; margin-bottom: 22px; }
+  .brand { color: #3d7eea; font-weight: 800; letter-spacing: .06em; font-size: 11pt; }
+  h1 { font-size: 19pt; margin: 6px 0 4px; }
+  .sub { color: #666; font-size: 9.5pt; }
+  h2 {
+    font-size: 12.5pt; margin: 22px 0 8px; padding: 7px 12px;
+    background: #f0f4fc; color: #1c2c4a; border-left: 4px solid #3d7eea; border-radius: 4px;
+  }
+  p { margin: 6px 0; }
+  ol.steps { counter-reset: step; list-style: none; padding-left: 0; }
+  ol.steps > li {
+    counter-increment: step; position: relative; padding: 4px 0 12px 40px; margin: 0;
+  }
+  ol.steps > li::before {
+    content: counter(step); position: absolute; left: 0; top: 2px;
+    width: 26px; height: 26px; background: #3d7eea; color: #fff; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11pt;
+  }
+  .stitle { font-weight: 700; font-size: 11pt; }
+  .note {
+    background: #fff8e6; border: 1px solid #f0d98a; border-radius: 6px;
+    padding: 9px 13px; margin: 8px 0; font-size: 9.8pt;
+  }
+  .warn {
+    background: #fdecec; border: 1px solid #f0a8a8; border-radius: 6px;
+    padding: 9px 13px; margin: 8px 0; font-size: 9.8pt;
+  }
+  .ok {
+    background: #eaf6ef; border: 1px solid #9ad3b3; border-radius: 6px;
+    padding: 9px 13px; margin: 8px 0; font-size: 9.8pt;
+  }
+  code {
+    background: #f1f1f4; border-radius: 4px; padding: 1px 6px; font-size: 9.5pt;
+    font-family: "SFMono-Regular", Consolas, monospace;
+  }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 9.8pt; }
+  th, td { border: 1px solid #d8d8e0; padding: 7px 10px; text-align: left; }
+  th { background: #f4f5f8; }
+  .url { color: #3d7eea; font-weight: 700; }
+  .check li { margin: 3px 0; }
+  footer { margin-top: 26px; padding-top: 10px; border-top: 1px solid #ddd; color: #888; font-size: 8.5pt; }
+</style>
+</head>
+<body>
+  <div class="cover">
+    <div class="brand">Blendy 協業マッチングシステム</div>
+    <h1>Claude（Anthropic）APIキー 取得手順</h1>
+    <div class="sub">本サービスのAI機能（会社プロフィール生成・商談議事録の分析）に使用します。所要 約10分。</div>
+  </div>
+
+  <p>このガイドは、<strong>Claude（Anthropic社のAI）のAPIキー</strong>を取得し、安全に共有いただくための手順書です。
+  専門知識は不要です。画面の案内に沿って進めてください。</p>
+
+  <div class="note">
+    <strong>はじめに大切なこと:</strong> APIキーの利用には<strong>お支払い設定（クレジットの購入）が必要</strong>です。
+    アカウントを作っただけでは利用できません（手順 4 で設定します）。費用は<strong>使った分だけの従量課金</strong>で、
+    通常のご利用では月あたり数百円〜数千円程度の少額です。
+  </div>
+
+  <h2>手順</h2>
+  <ol class="steps">
+    <li>
+      <div class="stitle">アカウントを作成する</div>
+      <p><span class="url">https://console.anthropic.com</span> を開き、メールアドレス（または Google アカウント）で
+      サインアップします。届いた確認メールのリンクをクリックして認証してください。</p>
+    </li>
+    <li>
+      <div class="stitle">組織情報を入力する</div>
+      <p>初回ログイン時に組織名（会社名）などの簡単な情報を求められます。入力して進めます。</p>
+    </li>
+    <li>
+      <div class="stitle">電話番号を認証する</div>
+      <p>セキュリティのため、SMS による電話番号認証を求められる場合があります。届いたコードを入力します。</p>
+    </li>
+    <li>
+      <div class="stitle">お支払い設定・クレジット購入（重要）</div>
+      <p>左メニューの <strong>「Billing」（お支払い）</strong> を開き、クレジットカードを登録して
+      <strong>クレジットを購入</strong>します（例: $5〜$20 程度で十分に始められます）。
+      これを行わないと API キーが機能しません。</p>
+      <div class="note">使い過ぎが心配な場合は、同じ Billing 画面の <strong>「Usage limits」（利用上限）</strong>で
+      月額上限を設定できます（例: 月 $20 まで）。</div>
+    </li>
+    <li>
+      <div class="stitle">APIキーを発行する</div>
+      <p>左メニューの <strong>「API Keys」</strong> を開き、<strong>「Create Key」</strong>ボタンを押します。
+      キーの名前（例: <code>blendy</code>）を入力して作成します。</p>
+      <div class="warn"><strong>注意:</strong> 作成直後に表示される文字列（<code>sk-ant-</code> で始まる）は
+      <strong>その場でしか表示されません</strong>。必ずコピーして控えてください（再表示はできません）。</div>
+    </li>
+    <li>
+      <div class="stitle">キーを安全に共有する</div>
+      <p>コピーした APIキーを、開発担当へ安全な方法でお渡しください（次ページの注意を参照）。</p>
+    </li>
+  </ol>
+
+  <h2>APIキーの見た目（例）</h2>
+  <p>正しく取得できると、次のような文字列になります（実際の値は伏せています）。</p>
+  <p><code>sk-ant-api03-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code></p>
+
+  <h2>共有時のセキュリティ注意</h2>
+  <table>
+    <tr><th>やること</th><th>避けること</th></tr>
+    <tr>
+      <td>パスワード管理ツールや暗号化された手段で渡す</td>
+      <td>SNS・公開チャットへの貼り付け</td>
+    </tr>
+    <tr>
+      <td>渡す相手（開発担当）を限定する</td>
+      <td>メール本文に平文で記載して不特定多数に転送</td>
+    </tr>
+    <tr>
+      <td>不要になったらコンソールから無効化（Delete）できる</td>
+      <td>スクリーンショットで SNS 共有</td>
+    </tr>
+  </table>
+  <div class="ok">万一キーが漏れても、Anthropic コンソールの「API Keys」からいつでも無効化・再発行できます。ご安心ください。</div>
+
+  <h2>送付前チェックリスト</h2>
+  <ul class="check">
+    <li>☐ アカウントを作成し、メール認証を完了した</li>
+    <li>☐ Billing でクレジットを購入した（これが無いと動きません）</li>
+    <li>☐ 「Create Key」でキーを発行し、<code>sk-ant-</code> の文字列を控えた</li>
+    <li>☐ 安全な手段で開発担当に共有する準備ができた</li>
+  </ul>
+
+  <h2>よくある質問</h2>
+  <p><strong>Q. 無料で使えますか？</strong><br>
+  A. ごく少額の従量課金です。クレジット（前払い）を購入してご利用いただきます。使った分だけ消費されます。</p>
+  <p><strong>Q. どれくらい費用がかかりますか？</strong><br>
+  A. 通常のご利用では月あたり数百円〜数千円程度が目安です。心配な場合は利用上限を設定できます。</p>
+  <p><strong>Q. キーを間違えて公開してしまいました。</strong><br>
+  A. コンソールの「API Keys」で該当キーを Delete（無効化）し、新しいキーを作り直してください。</p>
+
+  <footer>
+    Blendy 協業マッチングシステム ｜ Claude（Anthropic）APIキー取得手順 ｜ お困りの際は開発担当までご連絡ください。
+  </footer>
+</body>
+</html>
